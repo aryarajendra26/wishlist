@@ -22,11 +22,12 @@
             align-items: center;
             min-height: 100vh;
             color: #444;
+            padding: 20px 0;
         }
 
         .container {
             background: white;
-            width: 90%;
+            width: 95%;
             max-width: 500px;
             padding: 30px;
             border-radius: 20px;
@@ -41,16 +42,16 @@
             margin-bottom: 10px;
         }
 
-        p { font-size: 0.9rem; color: #888; margin-bottom: 20px; }
+        .subtitle { font-size: 0.9rem; color: #888; margin-bottom: 20px; }
 
         .input-group {
             display: flex;
+            flex-direction: column;
             gap: 10px;
             margin-bottom: 20px;
         }
 
         input[type="text"] {
-            flex: 1;
             padding: 12px;
             border: 2px solid var(--soft-pink);
             border-radius: 10px;
@@ -64,7 +65,7 @@
             background: var(--primary-pink);
             color: white;
             border: none;
-            padding: 0 20px;
+            padding: 12px;
             border-radius: 10px;
             cursor: pointer;
             font-weight: 600;
@@ -82,26 +83,65 @@
         li {
             background: #fff;
             border-left: 5px solid var(--primary-pink);
-            margin-bottom: 10px;
-            padding: 12px 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            margin-bottom: 15px;
+            padding: 15px;
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             animation: fadeIn 0.5s ease;
+            position: relative;
         }
 
         li.completed {
-            text-decoration: line-through;
-            opacity: 0.6;
-            border-left-color: #ccc;
+            border-left-color: #2ecc71;
+            background-color: #f9fff9;
         }
 
-        .actions { display: flex; gap: 10px; }
+        .wish-content {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
 
-        .btn-done { color: #2ecc71; cursor: pointer; border: none; background: none; font-size: 1.2rem; }
-        .btn-delete { color: #e74c3c; cursor: pointer; border: none; background: none; font-size: 1.2rem; }
+        .wish-text { font-weight: 600; font-size: 1.1rem; }
+        .completed .wish-text { text-decoration: line-through; color: #888; }
+
+        .date-info {
+            font-size: 0.75rem;
+            color: #2ecc71;
+            font-weight: bold;
+        }
+
+        .photo-preview {
+            width: 100%;
+            max-height: 200px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .actions { 
+            display: flex; 
+            gap: 10px; 
+            margin-top: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn-done, .btn-delete, .btn-photo { 
+            cursor: pointer; 
+            border: none; 
+            background: #f0f0f0; 
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+
+        .btn-done:hover { background: #d4f7e1; }
+        .btn-delete:hover { background: #ffdce0; }
+
+        /* Input file tersembunyi */
+        .file-input { display: none; }
 
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
@@ -113,15 +153,14 @@
 
 <div class="container">
     <h1>Our Wishlist 💖</h1>
-    <p>Hal-hal seru yang ingin aku lakukan bersamamu.</p>
+    <p class="subtitle">Hal-hal seru yang ingin aku lakukan bersamamu.</p>
 
     <div class="input-group">
         <input type="text" id="wish-input" placeholder="Contoh: Piknik di taman...">
-        <button id="add-btn">Tambah</button>
+        <button id="add-btn">Tambah Wishlist</button>
     </div>
 
-    <ul id="wish-list">
-        </ul>
+    <ul id="wish-list"></ul>
 </div>
 
 <script>
@@ -129,60 +168,125 @@
     const addBtn = document.getElementById('add-btn');
     const wishList = document.getElementById('wish-list');
 
-    // Load data dari LocalStorage saat web dibuka
     document.addEventListener('DOMContentLoaded', getWishlist);
-
     addBtn.addEventListener('click', addWish);
 
     function addWish() {
         if (input.value === '') return;
 
-        createWishElement(input.value);
-        saveLocal(input.value);
+        const wishObj = {
+            id: Date.now(),
+            text: input.value,
+            completed: false,
+            date: null,
+            photo: null
+        };
+
+        createWishElement(wishObj);
+        saveLocal(wishObj);
         input.value = '';
     }
 
-    function createWishElement(text, isCompleted = false) {
+    function createWishElement(wish) {
         const li = document.createElement('li');
-        if (isCompleted) li.classList.add('completed');
+        li.setAttribute('data-id', wish.id);
+        if (wish.completed) li.classList.add('completed');
 
         li.innerHTML = `
-            <span>${text}</span>
+            <div class="wish-content">
+                <span class="wish-text">${wish.text}</span>
+                ${wish.date ? `<span class="date-info">✅ Selesai pada: ${wish.date}</span>` : ''}
+                <img src="${wish.photo || '#'}" class="photo-preview" style="display: ${wish.photo ? 'block' : 'none'}">
+            </div>
             <div class="actions">
-                <button class="btn-done" onclick="toggleComplete(this)">✔</button>
-                <button class="btn-delete" onclick="deleteWish(this)">✖</button>
+                <input type="file" class="file-input" accept="image/*" onchange="handlePhoto(this, ${wish.id})">
+                <button class="btn-photo" onclick="triggerFile(${wish.id})">📷 Foto</button>
+                <button class="btn-done" onclick="toggleComplete(${wish.id})">✔ Selesai</button>
+                <button class="btn-delete" onclick="deleteWish(${wish.id})">✖ Hapus</button>
             </div>
         `;
         wishList.appendChild(li);
     }
 
-    function toggleComplete(btn) {
-        const li = btn.parentElement.parentElement;
-        li.classList.toggle('completed');
+    function triggerFile(id) {
+        const li = document.querySelector(`li[data-id="${id}"]`);
+        li.querySelector('.file-input').click();
     }
 
-    function deleteWish(btn) {
-        const li = btn.parentElement.parentElement;
-        removeLocal(li.children[0].innerText);
+    function handlePhoto(input, id) {
+        const file = input.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const photoData = e.target.result;
+            // Update UI
+            const li = document.querySelector(`li[data-id="${id}"]`);
+            const img = li.querySelector('.photo-preview');
+            img.src = photoData;
+            img.style.display = 'block';
+
+            // Update LocalStorage
+            updateLocal(id, { photo: photoData });
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function toggleComplete(id) {
+        const li = document.querySelector(`li[data-id="${id}"]`);
+        const isNowCompleted = li.classList.toggle('completed');
+        
+        const today = new Date();
+        const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`;
+        
+        const dateDisplay = isNowCompleted ? dateStr : null;
+
+        // Update UI untuk tanggal
+        if (isNowCompleted) {
+            const dateSpan = document.createElement('span');
+            dateSpan.className = 'date-info';
+            dateSpan.innerText = `✅ Selesai pada: ${dateStr}`;
+            li.querySelector('.wish-content').insertBefore(dateSpan, li.querySelector('.photo-preview'));
+        } else {
+            const dateSpan = li.querySelector('.date-info');
+            if (dateSpan) dateSpan.remove();
+        }
+
+        updateLocal(id, { completed: isNowCompleted, date: dateDisplay });
+    }
+
+    function deleteWish(id) {
+        const li = document.querySelector(`li[data-id="${id}"]`);
         li.remove();
+        removeLocal(id);
     }
 
-    // Fungsi simpan ke memori browser (LocalStorage)
-    function saveLocal(wish) {
-        let wishes = localStorage.getItem('wishes') ? JSON.parse(localStorage.getItem('wishes')) : [];
-        wishes.push(wish);
-        localStorage.setItem('wishes', JSON.stringify(wishes));
+    // --- LOCAL STORAGE FUNCTIONS ---
+
+    function saveLocal(wishObj) {
+        let wishes = localStorage.getItem('wishes_v2') ? JSON.parse(localStorage.getItem('wishes_v2')) : [];
+        wishes.push(wishObj);
+        localStorage.setItem('wishes_v2', JSON.stringify(wishes));
     }
 
     function getWishlist() {
-        let wishes = localStorage.getItem('wishes') ? JSON.parse(localStorage.getItem('wishes')) : [];
+        let wishes = localStorage.getItem('wishes_v2') ? JSON.parse(localStorage.getItem('wishes_v2')) : [];
         wishes.forEach(wish => createWishElement(wish));
     }
 
-    function removeLocal(wishText) {
-        let wishes = JSON.parse(localStorage.getItem('wishes'));
-        const filtered = wishes.filter(w => w !== wishText);
-        localStorage.setItem('wishes', JSON.stringify(filtered));
+    function updateLocal(id, updatedData) {
+        let wishes = JSON.parse(localStorage.getItem('wishes_v2'));
+        const index = wishes.findIndex(w => w.id === id);
+        if (index !== -1) {
+            wishes[index] = { ...wishes[index], ...updatedData };
+            localStorage.setItem('wishes_v2', JSON.stringify(wishes));
+        }
+    }
+
+    function removeLocal(id) {
+        let wishes = JSON.parse(localStorage.getItem('wishes_v2'));
+        const filtered = wishes.filter(w => w.id !== id);
+        localStorage.setItem('wishes_v2', JSON.stringify(filtered));
     }
 </script>
 
