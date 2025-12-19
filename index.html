@@ -28,6 +28,8 @@
 </head>
 <body>
 
+<audio id="success-sound" src="https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3" preload="auto"></audio>
+
 <div class="container">
     <h1>Our Wishlist ❤️</h1>
     <p class="subtitle">Hal-hal seru yang akan kita lakukan, khusus aku buat untuk fina tersayang..</p>
@@ -63,6 +65,7 @@
     const input = document.getElementById('wish-input');
     const addBtn = document.getElementById('add-btn');
     const wishListUI = document.getElementById('wish-list');
+    const successSound = document.getElementById('success-sound');
 
     addBtn.onclick = async () => {
         if (input.value === '') return;
@@ -117,13 +120,17 @@
         await updateDoc(doc(db, "wishlist", id), { photo: url });
     };
 
-    // UPDATE STATUS + EFEK KONFETI OTOMATIS
+    // UPDATE STATUS + EFEK KONFETI + SUARA
     window.markDone = async (id, currentStatus) => {
         const today = new Date();
         const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`;
         
-        // Cek jika tombol diklik untuk menyelesaikan (bukan membatalkan)
         if (!currentStatus) {
+            // Putar Suara
+            successSound.currentTime = 0;
+            successSound.play().catch(e => console.log("Audio play blocked by browser"));
+
+            // Efek Konfeti
             confetti({
                 particleCount: 150,
                 spread: 70,
