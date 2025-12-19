@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Love Journey | Wishlist</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-pink: #ff85a1;
+            --soft-pink: #fbb1bd;
+            --dark-pink: #ff477e;
+            --bg-color: #fff0f3;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #444;
+        }
+
+        .container {
+            background: white;
+            width: 90%;
+            max-width: 500px;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h1 {
+            font-family: 'Dancing Script', cursive;
+            color: var(--dark-pink);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        p { font-size: 0.9rem; color: #888; margin-bottom: 20px; }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid var(--soft-pink);
+            border-radius: 10px;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input[type="text"]:focus { border-color: var(--dark-pink); }
+
+        button#add-btn {
+            background: var(--primary-pink);
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        button#add-btn:hover { background: var(--dark-pink); }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            text-align: left;
+        }
+
+        li {
+            background: #fff;
+            border-left: 5px solid var(--primary-pink);
+            margin-bottom: 10px;
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            animation: fadeIn 0.5s ease;
+        }
+
+        li.completed {
+            text-decoration: line-through;
+            opacity: 0.6;
+            border-left-color: #ccc;
+        }
+
+        .actions { display: flex; gap: 10px; }
+
+        .btn-done { color: #2ecc71; cursor: pointer; border: none; background: none; font-size: 1.2rem; }
+        .btn-delete { color: #e74c3c; cursor: pointer; border: none; background: none; font-size: 1.2rem; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Our Wishlist 💖</h1>
+    <p>Hal-hal seru yang ingin aku lakukan bersamamu.</p>
+
+    <div class="input-group">
+        <input type="text" id="wish-input" placeholder="Contoh: Piknik di taman...">
+        <button id="add-btn">Tambah</button>
+    </div>
+
+    <ul id="wish-list">
+        </ul>
+</div>
+
+<script>
+    const input = document.getElementById('wish-input');
+    const addBtn = document.getElementById('add-btn');
+    const wishList = document.getElementById('wish-list');
+
+    // Load data dari LocalStorage saat web dibuka
+    document.addEventListener('DOMContentLoaded', getWishlist);
+
+    addBtn.addEventListener('click', addWish);
+
+    function addWish() {
+        if (input.value === '') return;
+
+        createWishElement(input.value);
+        saveLocal(input.value);
+        input.value = '';
+    }
+
+    function createWishElement(text, isCompleted = false) {
+        const li = document.createElement('li');
+        if (isCompleted) li.classList.add('completed');
+
+        li.innerHTML = `
+            <span>${text}</span>
+            <div class="actions">
+                <button class="btn-done" onclick="toggleComplete(this)">✔</button>
+                <button class="btn-delete" onclick="deleteWish(this)">✖</button>
+            </div>
+        `;
+        wishList.appendChild(li);
+    }
+
+    function toggleComplete(btn) {
+        const li = btn.parentElement.parentElement;
+        li.classList.toggle('completed');
+    }
+
+    function deleteWish(btn) {
+        const li = btn.parentElement.parentElement;
+        removeLocal(li.children[0].innerText);
+        li.remove();
+    }
+
+    // Fungsi simpan ke memori browser (LocalStorage)
+    function saveLocal(wish) {
+        let wishes = localStorage.getItem('wishes') ? JSON.parse(localStorage.getItem('wishes')) : [];
+        wishes.push(wish);
+        localStorage.setItem('wishes', JSON.stringify(wishes));
+    }
+
+    function getWishlist() {
+        let wishes = localStorage.getItem('wishes') ? JSON.parse(localStorage.getItem('wishes')) : [];
+        wishes.forEach(wish => createWishElement(wish));
+    }
+
+    function removeLocal(wishText) {
+        let wishes = JSON.parse(localStorage.getItem('wishes'));
+        const filtered = wishes.filter(w => w !== wishText);
+        localStorage.setItem('wishes', JSON.stringify(filtered));
+    }
+</script>
+
+</body>
+</html>
