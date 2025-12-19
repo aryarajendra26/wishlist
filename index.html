@@ -122,23 +122,18 @@
             await updateDoc(doc(db, "wishlist", id), { photo: url });
         } catch (err) {
             console.error('Upload error:', err);
-            alert('Gagal mengunggah foto. Periksa koneksi dan aturan Firebase Storage.');
         } finally {
             if (loader) loader.style.display = 'none';
         }
     };
 
-    // UPDATE STATUS + EFEK KONFETI + SUARA
     window.markDone = async (id, currentStatus) => {
         const today = new Date();
         const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`;
         
         if (!currentStatus) {
-            // Putar Suara
             successSound.currentTime = 0;
-            successSound.play().catch(e => console.log("Audio play blocked by browser"));
-
-            // Efek Konfeti
+            successSound.play().catch(e => console.log("Suara diblokir browser"));
             confetti({
                 particleCount: 150,
                 spread: 70,
@@ -159,169 +154,5 @@
         }
     };
 </script>
-
-</body>
-</html><!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Our Love Journey | Cloud Wishlist</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
-    <style>
-        :root { --primary-pink: #ff85a1; --soft-pink: #fbb1bd; --dark-pink: #ff477e; --bg-color: #fff0f3; }
-        body { font-family: 'Poppins', sans-serif; background-color: var(--bg-color); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; color: #444; padding: 20px; }
-        .container { background: white; width: 95%; max-width: 500px; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
-        h1 { font-family: 'Dancing Script', cursive; color: var(--dark-pink); font-size: 2.5rem; margin-bottom: 10px; }
-        .subtitle { font-size: 0.9rem; color: #888; margin-bottom: 20px; }
-        .input-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-        input[type="text"] { padding: 12px; border: 2px solid var(--soft-pink); border-radius: 10px; outline: none; }
-        button#add-btn { background: var(--primary-pink); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 600; }
-        ul { list-style: none; padding: 0; text-align: left; }
-        li { background: #fff; border-left: 5px solid var(--primary-pink); margin-bottom: 15px; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.3s; }
-        li.completed { border-left-color: #2ecc71; background-color: #f9fff9; }
-        .wish-text { font-weight: 600; font-size: 1.1rem; display: block; }
-        .date-info { font-size: 0.75rem; color: #2ecc71; font-weight: bold; }
-        .photo-preview { width: 100%; max-height: 250px; object-fit: cover; border-radius: 10px; margin-top: 10px; }
-        .actions { display: flex; gap: 10px; margin-top: 10px; justify-content: flex-end; }
-        .btn-done, .btn-delete, .btn-photo { cursor: pointer; border: none; background: #f0f0f0; padding: 5px 10px; border-radius: 5px; font-size: 0.8rem; }
-        .loading-text { font-size: 0.8rem; color: var(--primary-pink); display: none; }
-    </style>
-</head>
-<body>
-
-<audio id="success-sound" src="https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3" preload="auto"></audio>
-
-<div class="container">
-    <h1>Our Wishlist ❤️</h1>
-    <p class="subtitle">Hal-hal seru yang akan kita lakukan, khusus aku buat untuk fina tersayang..</p>
-
-    <div class="input-group">
-        <input type="text" id="wish-input" placeholder="Contoh: Dinner di tepi pantai...">
-        <button id="add-btn">Tambah Wishlist</button>
-    </div>
-
-    <ul id="wish-list"></ul>
-</div>
-
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyDCnCs-qlRPdk3YUX8qptsEssnzaPkvOlo",
-        authDomain: "ourlovejourney-4096d.firebaseapp.com",
-        projectId: "ourlovejourney-4096d",
-        storageBucket: "ourlovejourney-4096d.appspot.com",
-        messagingSenderId: "415202896980",
-        appId: "1:415202896980:web:8aa74a553f0bc7111091c1",
-        measurementId: "G-J8JMJ3J9W4"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const storage = getStorage(app);
-    const wishlistCol = collection(db, "wishlist");
-
-    const input = document.getElementById('wish-input');
-    const addBtn = document.getElementById('add-btn');
-    const wishListUI = document.getElementById('wish-list');
-    const successSound = document.getElementById('success-sound');
-
-    addBtn.onclick = async () => {
-        if (input.value === '') return;
-        await addDoc(wishlistCol, {
-            text: input.value,
-            completed: false,
-            date: null,
-            photo: null,
-            createdAt: Date.now()
-        });
-        input.value = '';
-    };
-
-    const q = query(wishlistCol, orderBy("createdAt", "desc"));
-    onSnapshot(q, (snapshot) => {
-        wishListUI.innerHTML = '';
-        snapshot.forEach((doc) => {
-            renderWish({ id: doc.id, ...doc.data() });
-        });
-    });
-
-    function renderWish(wish) {
-        const li = document.createElement('li');
-        if (wish.completed) li.classList.add('completed');
-
-        li.innerHTML = `
-            <div class="wish-content">
-                <span class="wish-text">${wish.text}</span>
-                ${wish.date ? `<span class="date-info">✅ Selesai: ${wish.date}</span>` : ''}
-                ${wish.photo ? `<img src="${wish.photo}" class="photo-preview">` : ''}
-                <div id="loader-${wish.id}" class="loading-text">Sedang mengunggah foto...</div>
-            </div>
-            <div class="actions">
-                <input type="file" id="file-${wish.id}" style="display:none" accept="image/*">
-                <button class="btn-photo" onclick="document.getElementById('file-${wish.id}').click()">📷 Foto</button>
-                <button class="btn-done" onclick="markDone('${wish.id}', ${wish.completed})">✔</button>
-                <button class="btn-delete" onclick="deleteItem('${wish.id}')">✖</button>
-            </div>
-        `;
-        wishListUI.appendChild(li);
-
-        const fileInput = document.getElementById(`file-${wish.id}`);
-        if(fileInput) fileInput.onchange = (e) => uploadPhoto(e.target.files[0], wish.id);
-    }
-
-    window.uploadPhoto = async (file, id) => {
-        if (!file) return;
-        const loader = document.getElementById(`loader-${id}`);
-        if (loader) loader.style.display = 'block';
-        try {
-            const storageRef = ref(storage, `photos/${id}`);
-            await uploadBytes(storageRef, file);
-            const url = await getDownloadURL(storageRef);
-            await updateDoc(doc(db, "wishlist", id), { photo: url });
-        } catch (err) {
-            console.error('Upload error:', err);
-            alert('Gagal mengunggah foto. Periksa koneksi dan aturan Firebase Storage.');
-        } finally {
-            if (loader) loader.style.display = 'none';
-        }
-    };
-
-    // UPDATE STATUS + EFEK KONFETI + SUARA
-    window.markDone = async (id, currentStatus) => {
-        const today = new Date();
-        const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`;
-        
-        if (!currentStatus) {
-            // Putar Suara
-            successSound.currentTime = 0;
-            successSound.play().catch(e => console.log("Audio play blocked by browser"));
-
-            // Efek Konfeti
-            confetti({
-                particleCount: 150,
-                spread: 70,
-                origin: { y: 0.6 },
-                colors: ['#ff85a1', '#fbb1bd', '#ff477e']
-            });
-        }
-        
-        await updateDoc(doc(db, "wishlist", id), { 
-            completed: !currentStatus,
-            date: !currentStatus ? dateStr : null
-        });
-    };
-
-    window.deleteItem = async (id) => {
-        if(confirm("Hapus wishlist ini?")) {
-            await deleteDoc(doc(db, "wishlist", id));
-        }
-    };
-</script>
-
 </body>
 </html>
