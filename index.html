@@ -11,10 +11,11 @@
         body { font-family: 'Poppins', sans-serif; background-color: var(--bg-color); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; color: #444; padding: 20px; }
         .container { background: white; width: 95%; max-width: 500px; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
         
-        /* Gaya untuk Countdown */
-        .anniversary-box { background: linear-gradient(135deg, var(--primary-pink), var(--dark-pink)); color: white; padding: 15px; border-radius: 15px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(255, 71, 126, 0.3); }
-        .days-count { font-size: 1.8rem; font-weight: 700; display: block; }
-        .days-label { font-size: 0.8rem; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px; }
+        /* Gaya untuk Anniversary Box */
+        .anniversary-box { background: linear-gradient(135deg, var(--primary-pink), var(--dark-pink)); color: white; padding: 20px; border-radius: 15px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(255, 71, 126, 0.3); }
+        .days-count { font-size: 1.8rem; font-weight: 700; display: block; margin: 5px 0; }
+        .days-label { font-size: 0.75rem; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+        .divider { height: 1px; background: rgba(255,255,255,0.3); margin: 10px auto; width: 80%; }
 
         h1 { font-family: 'Dancing Script', cursive; color: var(--dark-pink); font-size: 2.5rem; margin-bottom: 10px; margin-top: 10px; }
         .subtitle { font-size: 0.9rem; color: #888; margin-bottom: 20px; }
@@ -40,7 +41,9 @@
     <div class="anniversary-box">
         <span class="days-label">Sudah Bersama Selama</span>
         <span id="days-counter" class="days-count">0 Hari</span>
-        <span class="days-label">❤️ Dan Selamanya ❤️</span>
+        <div class="divider"></div>
+        <span class="days-label">Menuju Anniversary Berikutnya</span>
+        <span id="next-anniv-counter" class="days-count" style="font-size: 1.4rem;">0 Hari Lagi</span>
     </div>
 
     <h1>Our Wishlist ❤️</h1>
@@ -59,7 +62,6 @@
     import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-    // --- CONFIG FIREBASE ---
     const firebaseConfig = {
         apiKey: "AIzaSyDCnCs-qlRPdk3YUX8qptsEssnzaPkvOlo",
         authDomain: "ourlovejourney-4096d.firebaseapp.com",
@@ -75,18 +77,27 @@
     const storage = getStorage(app);
     const wishlistCol = collection(db, "wishlist");
 
-    // --- LOGIKA COUNTDOWN ANNIVERSARY ---
-    // GANTI TANGGAL DI BAWAH INI (Tahun, Bulan-1, Tanggal)
-    // Contoh: Jan=0, Feb=1, Mar=2, dst. Jika jadian 15 Maret 2023 -> new Date(2023, 2, 15)
-    const startDate = new Date(2024, 2, 9); // <--- Ubah tanggal jadianmu di sini!
+    // --- LOGIKA COUNTDOWN ---
+    const startDate = new Date(2025, 2, 9); // 9 Maret 2025
 
-    function updateAnniversary() {
+    function updateCounters() {
         const now = new Date();
+        
+        // 1. Total hari bersama
         const diffInMs = now - startDate;
         const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
         document.getElementById('days-counter').innerText = diffInDays + " Hari";
+
+        // 2. Menuju Anniversary Berikutnya
+        let nextAnniv = new Date(now.getFullYear(), startDate.getMonth(), startDate.getDate());
+        if (now > nextAnniv) {
+            nextAnniv.setFullYear(now.getFullYear() + 1);
+        }
+        const msUntilNext = nextAnniv - now;
+        const daysUntilNext = Math.ceil(msUntilNext / (1000 * 60 * 60 * 24));
+        document.getElementById('next-anniv-counter').innerText = daysUntilNext + " Hari Lagi";
     }
-    updateAnniversary();
+    updateCounters();
 
     // --- LOGIKA WISHLIST ---
     const input = document.getElementById('wish-input');
@@ -96,28 +107,18 @@
 
     addBtn.onclick = async () => {
         if (input.value === '') return;
-        await addDoc(wishlistCol, {
-            text: input.value,
-            completed: false,
-            date: null,
-            photo: null,
-            createdAt: Date.now()
-        });
+        await addDoc(wishlistCol, { text: input.value, completed: false, date: null, photo: null, createdAt: Date.now() });
         input.value = '';
     };
 
-    const q = query(wishlistCol, orderBy("createdAt", "desc"));
-    onSnapshot(q, (snapshot) => {
+    onSnapshot(query(wishlistCol, orderBy("createdAt", "desc")), (snapshot) => {
         wishListUI.innerHTML = '';
-        snapshot.forEach((doc) => {
-            renderWish({ id: doc.id, ...doc.data() });
-        });
+        snapshot.forEach((doc) => { renderWish({ id: doc.id, ...doc.data() }); });
     });
 
     function renderWish(wish) {
         const li = document.createElement('li');
         if (wish.completed) li.classList.add('completed');
-
         li.innerHTML = `
             <div class="wish-content">
                 <span class="wish-text">${wish.text}</span>
@@ -157,13 +158,10 @@
             confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#ff85a1', '#fbb1bd', '#ff477e'] });
         }
         const today = new Date();
-        const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`;
-        await updateDoc(doc(db, "wishlist", id), { completed: !currentStatus, date: !currentStatus ? dateStr : null });
+        await updateDoc(doc(db, "wishlist", id), { completed: !currentStatus, date: !currentStatus ? `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}` : null });
     };
 
-    window.deleteItem = async (id) => {
-        if(confirm("Hapus wishlist ini?")) { await deleteDoc(doc(db, "wishlist", id)); }
-    };
+    window.deleteItem = async (id) => { if(confirm("Hapus wishlist ini?")) { await deleteDoc(doc(db, "wishlist", id)); } };
 </script>
 </body>
 </html>
