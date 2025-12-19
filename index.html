@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Our Love Journey | Cloud Wishlist</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
     <style>
-        /* CSS tetap sama seperti versi sebelumnya agar tampilan tetap cantik */
         :root { --primary-pink: #ff85a1; --soft-pink: #fbb1bd; --dark-pink: #ff477e; --bg-color: #fff0f3; }
         body { font-family: 'Poppins', sans-serif; background-color: var(--bg-color); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; color: #444; padding: 20px 0; }
         .container { background: white; width: 95%; max-width: 500px; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
@@ -16,7 +16,7 @@
         input[type="text"] { padding: 12px; border: 2px solid var(--soft-pink); border-radius: 10px; outline: none; }
         button#add-btn { background: var(--primary-pink); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 600; }
         ul { list-style: none; padding: 0; text-align: left; }
-        li { background: #fff; border-left: 5px solid var(--primary-pink); margin-bottom: 15px; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        li { background: #fff; border-left: 5px solid var(--primary-pink); margin-bottom: 15px; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.3s; }
         li.completed { border-left-color: #2ecc71; background-color: #f9fff9; }
         .wish-text { font-weight: 600; font-size: 1.1rem; display: block; }
         .date-info { font-size: 0.75rem; color: #2ecc71; font-weight: bold; }
@@ -30,11 +30,11 @@
 
 <div class="container">
     <h1>Our Wishlist ❤️</h1>
-    <p class="subtitle">Hal-hal seru yang akan kita lakukan, khusus aku buat untuk fina tersayang.</p>
+    <p class="subtitle">Hal-hal seru yang akan kita lakukan, khusus aku buat untuk fina tersayang..</p>
 
     <div class="input-group">
-        <input type="text" id="wish-input" placeholder="Contoh: Piknik di taman...">
-        <button id="add-btn">Tambah wishlist</button>
+        <input type="text" id="wish-input" placeholder="Contoh: Dinner di tepi pantai...">
+        <button id="add-btn">Tambah Wishlist</button>
     </div>
 
     <ul id="wish-list"></ul>
@@ -45,18 +45,16 @@
     import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-    // --- MASUKKAN CONFIG KAMU DI SINI ---
-const firebaseConfig = {
-  apiKey: "AIzaSyDCnCs-qlRPdk3YUX8qptsEssnzaPkvOlo",
-  authDomain: "ourlovejourney-4096d.firebaseapp.com",
-  projectId: "ourlovejourney-4096d",
-  storageBucket: "ourlovejourney-4096d.firebasestorage.app",
-  messagingSenderId: "415202896980",
-  appId: "1:415202896980:web:8aa74a553f0bc7111091c1",
-  measurementId: "G-J8JMJ3J9W4"
-};
+    const firebaseConfig = {
+        apiKey: "AIzaSyDCnCs-qlRPdk3YUX8qptsEssnzaPkvOlo",
+        authDomain: "ourlovejourney-4096d.firebaseapp.com",
+        projectId: "ourlovejourney-4096d",
+        storageBucket: "ourlovejourney-4096d.firebasestorage.app",
+        messagingSenderId: "415202896980",
+        appId: "1:415202896980:web:8aa74a553f0bc7111091c1",
+        measurementId: "G-J8JMJ3J9W4"
+    };
 
-    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const storage = getStorage(app);
@@ -66,7 +64,6 @@ const firebaseConfig = {
     const addBtn = document.getElementById('add-btn');
     const wishListUI = document.getElementById('wish-list');
 
-    // 1. TAMBAH DATA KE FIREBASE
     addBtn.onclick = async () => {
         if (input.value === '') return;
         await addDoc(wishlistCol, {
@@ -79,7 +76,6 @@ const firebaseConfig = {
         input.value = '';
     };
 
-    // 2. BACA DATA SECARA REAL-TIME
     const q = query(wishlistCol, orderBy("createdAt", "desc"));
     onSnapshot(q, (snapshot) => {
         wishListUI.innerHTML = '';
@@ -108,27 +104,33 @@ const firebaseConfig = {
         `;
         wishListUI.appendChild(li);
 
-        // Event listener untuk upload foto
         const fileInput = document.getElementById(`file-${wish.id}`);
-        fileInput.onchange = (e) => uploadPhoto(e.target.files[0], wish.id);
+        if(fileInput) fileInput.onchange = (e) => uploadPhoto(e.target.files[0], wish.id);
     }
 
-    // 3. UPLOAD FOTO KE STORAGE
     window.uploadPhoto = async (file, id) => {
         if (!file) return;
         document.getElementById(`loader-${id}`).style.display = 'block';
-        
         const storageRef = ref(storage, `photos/${id}`);
         await uploadBytes(storageRef, file);
         const url = await getDownloadURL(storageRef);
-        
         await updateDoc(doc(db, "wishlist", id), { photo: url });
     };
 
-    // 4. UPDATE STATUS SELESAI
+    // UPDATE STATUS + EFEK KONFETI OTOMATIS
     window.markDone = async (id, currentStatus) => {
         const today = new Date();
         const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`;
+        
+        // Cek jika tombol diklik untuk menyelesaikan (bukan membatalkan)
+        if (!currentStatus) {
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#ff85a1', '#fbb1bd', '#ff477e']
+            });
+        }
         
         await updateDoc(doc(db, "wishlist", id), { 
             completed: !currentStatus,
@@ -136,7 +138,6 @@ const firebaseConfig = {
         });
     };
 
-    // 5. HAPUS DATA
     window.deleteItem = async (id) => {
         if(confirm("Hapus wishlist ini?")) {
             await deleteDoc(doc(db, "wishlist", id));
@@ -146,4 +147,3 @@ const firebaseConfig = {
 
 </body>
 </html>
-
