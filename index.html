@@ -3,291 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Our Love Journey | Wishlist</title>
+    <title>Our Love Journey | Cloud Wishlist</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary-pink: #ff85a1;
-            --soft-pink: #fbb1bd;
-            --dark-pink: #ff477e;
-            --bg-color: #fff0f3;
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: var(--bg-color);
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            color: #444;
-            padding: 20px 0;
-        }
-
-        .container {
-            background: white;
-            width: 95%;
-            max-width: 500px;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-
-        h1 {
-            font-family: 'Dancing Script', cursive;
-            color: var(--dark-pink);
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-
+        /* CSS tetap sama seperti versi sebelumnya agar tampilan tetap cantik */
+        :root { --primary-pink: #ff85a1; --soft-pink: #fbb1bd; --dark-pink: #ff477e; --bg-color: #fff0f3; }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--bg-color); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; color: #444; padding: 20px 0; }
+        .container { background: white; width: 95%; max-width: 500px; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
+        h1 { font-family: 'Dancing Script', cursive; color: var(--dark-pink); font-size: 2.5rem; margin-bottom: 10px; }
         .subtitle { font-size: 0.9rem; color: #888; margin-bottom: 20px; }
-
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        input[type="text"] {
-            padding: 12px;
-            border: 2px solid var(--soft-pink);
-            border-radius: 10px;
-            outline: none;
-            transition: 0.3s;
-        }
-
-        input[type="text"]:focus { border-color: var(--dark-pink); }
-
-        button#add-btn {
-            background: var(--primary-pink);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: 0.3s;
-        }
-
-        button#add-btn:hover { background: var(--dark-pink); }
-
-        ul {
-            list-style: none;
-            padding: 0;
-            text-align: left;
-        }
-
-        li {
-            background: #fff;
-            border-left: 5px solid var(--primary-pink);
-            margin-bottom: 15px;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            animation: fadeIn 0.5s ease;
-            position: relative;
-        }
-
-        li.completed {
-            border-left-color: #2ecc71;
-            background-color: #f9fff9;
-        }
-
-        .wish-content {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .wish-text { font-weight: 600; font-size: 1.1rem; }
-        .completed .wish-text { text-decoration: line-through; color: #888; }
-
-        .date-info {
-            font-size: 0.75rem;
-            color: #2ecc71;
-            font-weight: bold;
-        }
-
-        .photo-preview {
-            width: 100%;
-            max-height: 200px;
-            object-fit: cover;
-            border-radius: 10px;
-            margin-top: 10px;
-            display: none;
-        }
-
-        .actions { 
-            display: flex; 
-            gap: 10px; 
-            margin-top: 10px;
-            justify-content: flex-end;
-        }
-
-        .btn-done, .btn-delete, .btn-photo { 
-            cursor: pointer; 
-            border: none; 
-            background: #f0f0f0; 
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 0.9rem;
-            transition: 0.2s;
-        }
-
-        .btn-done:hover { background: #d4f7e1; }
-        .btn-delete:hover { background: #ffdce0; }
-
-        /* Input file tersembunyi */
-        .file-input { display: none; }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .input-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        input[type="text"] { padding: 12px; border: 2px solid var(--soft-pink); border-radius: 10px; outline: none; }
+        button#add-btn { background: var(--primary-pink); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 600; }
+        ul { list-style: none; padding: 0; text-align: left; }
+        li { background: #fff; border-left: 5px solid var(--primary-pink); margin-bottom: 15px; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        li.completed { border-left-color: #2ecc71; background-color: #f9fff9; }
+        .wish-text { font-weight: 600; font-size: 1.1rem; display: block; }
+        .date-info { font-size: 0.75rem; color: #2ecc71; font-weight: bold; }
+        .photo-preview { width: 100%; max-height: 250px; object-fit: cover; border-radius: 10px; margin-top: 10px; }
+        .actions { display: flex; gap: 10px; margin-top: 10px; justify-content: flex-end; }
+        .btn-done, .btn-delete, .btn-photo { cursor: pointer; border: none; background: #f0f0f0; padding: 5px 10px; border-radius: 5px; font-size: 0.8rem; }
+        .loading-text { font-size: 0.8rem; color: var(--primary-pink); display: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Our Wishlist 💖</h1>
-    <p class="subtitle">Hal-hal seru yang ingin aku lakukan bersamamu.</p>
+    <h1>Our Wishlist ☁️</h1>
+    <p class="subtitle">Tersinkronisasi di semua perangkat kita.</p>
 
     <div class="input-group">
-        <input type="text" id="wish-input" placeholder="Contoh: Piknik di taman...">
-        <button id="add-btn">Tambah Wishlist</button>
+        <input type="text" id="wish-input" placeholder="Contoh: Dinner di tepi pantai...">
+        <button id="add-btn">Tambah ke Cloud</button>
     </div>
 
     <ul id="wish-list"></ul>
 </div>
 
-<script>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
+    // --- MASUKKAN CONFIG KAMU DI SINI ---
+const firebaseConfig = {
+  apiKey: "AIzaSyDCnCs-qlRPdk3YUX8qptsEssnzaPkvOlo",
+  authDomain: "ourlovejourney-4096d.firebaseapp.com",
+  projectId: "ourlovejourney-4096d",
+  storageBucket: "ourlovejourney-4096d.firebasestorage.app",
+  messagingSenderId: "415202896980",
+  appId: "1:415202896980:web:8aa74a553f0bc7111091c1",
+  measurementId: "G-J8JMJ3J9W4"
+};
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+    const wishlistCol = collection(db, "wishlist");
+
     const input = document.getElementById('wish-input');
     const addBtn = document.getElementById('add-btn');
-    const wishList = document.getElementById('wish-list');
+    const wishListUI = document.getElementById('wish-list');
 
-    document.addEventListener('DOMContentLoaded', getWishlist);
-    addBtn.addEventListener('click', addWish);
-
-    function addWish() {
+    // 1. TAMBAH DATA KE FIREBASE
+    addBtn.onclick = async () => {
         if (input.value === '') return;
-
-        const wishObj = {
-            id: Date.now(),
+        await addDoc(wishlistCol, {
             text: input.value,
             completed: false,
             date: null,
-            photo: null
-        };
-
-        createWishElement(wishObj);
-        saveLocal(wishObj);
+            photo: null,
+            createdAt: Date.now()
+        });
         input.value = '';
-    }
+    };
 
-    function createWishElement(wish) {
+    // 2. BACA DATA SECARA REAL-TIME
+    const q = query(wishlistCol, orderBy("createdAt", "desc"));
+    onSnapshot(q, (snapshot) => {
+        wishListUI.innerHTML = '';
+        snapshot.forEach((doc) => {
+            renderWish({ id: doc.id, ...doc.data() });
+        });
+    });
+
+    function renderWish(wish) {
         const li = document.createElement('li');
-        li.setAttribute('data-id', wish.id);
         if (wish.completed) li.classList.add('completed');
 
         li.innerHTML = `
             <div class="wish-content">
                 <span class="wish-text">${wish.text}</span>
-                ${wish.date ? `<span class="date-info">✅ Selesai pada: ${wish.date}</span>` : ''}
-                <img src="${wish.photo || '#'}" class="photo-preview" style="display: ${wish.photo ? 'block' : 'none'}">
+                ${wish.date ? `<span class="date-info">✅ Selesai: ${wish.date}</span>` : ''}
+                ${wish.photo ? `<img src="${wish.photo}" class="photo-preview">` : ''}
+                <div id="loader-${wish.id}" class="loading-text">Sedang mengunggah foto...</div>
             </div>
             <div class="actions">
-                <input type="file" class="file-input" accept="image/*" onchange="handlePhoto(this, ${wish.id})">
-                <button class="btn-photo" onclick="triggerFile(${wish.id})">📷 Foto</button>
-                <button class="btn-done" onclick="toggleComplete(${wish.id})">✔ Selesai</button>
-                <button class="btn-delete" onclick="deleteWish(${wish.id})">✖ Hapus</button>
+                <input type="file" id="file-${wish.id}" style="display:none" accept="image/*">
+                <button class="btn-photo" onclick="document.getElementById('file-${wish.id}').click()">📷 Foto</button>
+                <button class="btn-done" onclick="markDone('${wish.id}', ${wish.completed})">✔</button>
+                <button class="btn-delete" onclick="deleteItem('${wish.id}')">✖</button>
             </div>
         `;
-        wishList.appendChild(li);
+        wishListUI.appendChild(li);
+
+        // Event listener untuk upload foto
+        const fileInput = document.getElementById(`file-${wish.id}`);
+        fileInput.onchange = (e) => uploadPhoto(e.target.files[0], wish.id);
     }
 
-    function triggerFile(id) {
-        const li = document.querySelector(`li[data-id="${id}"]`);
-        li.querySelector('.file-input').click();
-    }
-
-    function handlePhoto(input, id) {
-        const file = input.files[0];
+    // 3. UPLOAD FOTO KE STORAGE
+    window.uploadPhoto = async (file, id) => {
         if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const photoData = e.target.result;
-            // Update UI
-            const li = document.querySelector(`li[data-id="${id}"]`);
-            const img = li.querySelector('.photo-preview');
-            img.src = photoData;
-            img.style.display = 'block';
-
-            // Update LocalStorage
-            updateLocal(id, { photo: photoData });
-        };
-        reader.readAsDataURL(file);
-    }
-
-    function toggleComplete(id) {
-        const li = document.querySelector(`li[data-id="${id}"]`);
-        const isNowCompleted = li.classList.toggle('completed');
+        document.getElementById(`loader-${id}`).style.display = 'block';
         
+        const storageRef = ref(storage, `photos/${id}`);
+        await uploadBytes(storageRef, file);
+        const url = await getDownloadURL(storageRef);
+        
+        await updateDoc(doc(db, "wishlist", id), { photo: url });
+    };
+
+    // 4. UPDATE STATUS SELESAI
+    window.markDone = async (id, currentStatus) => {
         const today = new Date();
         const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`;
         
-        const dateDisplay = isNowCompleted ? dateStr : null;
+        await updateDoc(doc(db, "wishlist", id), { 
+            completed: !currentStatus,
+            date: !currentStatus ? dateStr : null
+        });
+    };
 
-        // Update UI untuk tanggal
-        if (isNowCompleted) {
-            const dateSpan = document.createElement('span');
-            dateSpan.className = 'date-info';
-            dateSpan.innerText = `✅ Selesai pada: ${dateStr}`;
-            li.querySelector('.wish-content').insertBefore(dateSpan, li.querySelector('.photo-preview'));
-        } else {
-            const dateSpan = li.querySelector('.date-info');
-            if (dateSpan) dateSpan.remove();
+    // 5. HAPUS DATA
+    window.deleteItem = async (id) => {
+        if(confirm("Hapus wishlist ini?")) {
+            await deleteDoc(doc(db, "wishlist", id));
         }
-
-        updateLocal(id, { completed: isNowCompleted, date: dateDisplay });
-    }
-
-    function deleteWish(id) {
-        const li = document.querySelector(`li[data-id="${id}"]`);
-        li.remove();
-        removeLocal(id);
-    }
-
-    // --- LOCAL STORAGE FUNCTIONS ---
-
-    function saveLocal(wishObj) {
-        let wishes = localStorage.getItem('wishes_v2') ? JSON.parse(localStorage.getItem('wishes_v2')) : [];
-        wishes.push(wishObj);
-        localStorage.setItem('wishes_v2', JSON.stringify(wishes));
-    }
-
-    function getWishlist() {
-        let wishes = localStorage.getItem('wishes_v2') ? JSON.parse(localStorage.getItem('wishes_v2')) : [];
-        wishes.forEach(wish => createWishElement(wish));
-    }
-
-    function updateLocal(id, updatedData) {
-        let wishes = JSON.parse(localStorage.getItem('wishes_v2'));
-        const index = wishes.findIndex(w => w.id === id);
-        if (index !== -1) {
-            wishes[index] = { ...wishes[index], ...updatedData };
-            localStorage.setItem('wishes_v2', JSON.stringify(wishes));
-        }
-    }
-
-    function removeLocal(id) {
-        let wishes = JSON.parse(localStorage.getItem('wishes_v2'));
-        const filtered = wishes.filter(w => w.id !== id);
-        localStorage.setItem('wishes_v2', JSON.stringify(filtered));
-    }
+    };
 </script>
 
 </body>
