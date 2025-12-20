@@ -3,96 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Our Love Journey | Anniversary Countdown</title>
+    <title>Our Love Journey</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
     
     <style>
-        :root { 
-            --primary-pink: #ff85a1; --soft-pink: #fbb1bd; --dark-pink: #ff477e;
-            --radius: 600px;
+        :root { --primary-pink: #ff85a1; --soft-pink: #fbb1bd; --dark-pink: #ff477e; --bg-color: #fff0f3; }
+        
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            background-color: var(--bg-color); 
+            font-family: 'Poppins', sans-serif; 
+            overflow-x: hidden; 
         }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; font-family: 'Poppins', sans-serif; overflow: hidden; }
 
-        .main-wrapper { display: flex; justify-content: center; height: 100vh; width: 100vw; position: relative; z-index: 10; }
+        .main-wrapper { display: flex; justify-content: center; padding: 30px 0 100px 0; min-height: 100vh; }
         
         .container { 
-            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
-            width: 90%; max-width: 450px; padding: 25px; border-radius: 20px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8); text-align: center; 
-            margin-top: 40px; height: fit-content;
+            background: white; width: 90%; max-width: 450px; 
+            padding: 30px; border-radius: 20px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            text-align: center; height: fit-content;
         }
 
-        /* Anniversary Box dengan Countdown */
+        /* Anniversary Box */
         .anniversary-box { 
             background: linear-gradient(135deg, var(--primary-pink), var(--dark-pink)); 
-            color: white; padding: 20px; border-radius: 15px; margin-bottom: 25px;
-            box-shadow: 0 4px 15px rgba(255, 71, 126, 0.4);
+            color: white; padding: 20px; border-radius: 15px; margin-bottom: 25px; 
+            box-shadow: 0 4px 15px rgba(255, 71, 126, 0.3);
         }
         .days-count { font-size: 2rem; font-weight: 700; display: block; margin: 5px 0; }
-        .countdown-text { font-size: 0.85rem; font-weight: 600; opacity: 0.9; }
+        .countdown-text { font-size: 0.8rem; opacity: 0.9; font-weight: 500; }
 
-        /* Dock Nav Styles */
-        .dock-wrapper { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 1000; }
-        .dock-container { display: flex; align-items: flex-end; gap: 12px; padding: 10px 15px; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(15px); border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.3); }
-        .dock-item { width: 45px; height: 45px; background: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; cursor: pointer; transition: 0.2s; }
-        .dock-item.active { border: 2px solid var(--dark-pink); box-shadow: 0 0 15px var(--primary-pink); }
+        /* Wishlist Items */
+        h1 { font-family: 'Dancing Script', cursive; color: var(--dark-pink); font-size: 2.5rem; margin: 0 0 15px 0; }
+        
+        .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        input[type="text"] { flex: 1; padding: 12px; border: 2px solid var(--soft-pink); border-radius: 10px; outline: none; }
+        button#add-btn { background: var(--primary-pink); color: white; border: none; padding: 0 20px; border-radius: 10px; cursor: pointer; font-weight: 600; }
 
-        /* Dome Gallery Styles */
-        #tab-memories { position: fixed; top: 0; left: 0; width: 100%; height: 100%; perspective: 1200px; overflow: hidden; display: none; z-index: 5; }
-        #tab-memories.active { display: block; }
-        .sphere-main { width: 100%; height: 100%; position: relative; display: flex; align-items: center; justify-content: center; touch-action: none; }
-        .sphere { position: absolute; transform-style: preserve-3d; transition: transform 0.1s ease-out; }
-        .item { position: absolute; transform-style: preserve-3d; left: 50%; top: 50%; width: 90px; height: 120px; margin-left: -45px; margin-top: -60px; }
-        .item__image { width: 100%; height: 100%; border-radius: 12px; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.6); }
-        .item__image img { width: 100%; height: 100%; object-fit: cover; }
-        .overlay-blur { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle, transparent 20%, rgba(0,0,0,0.9) 100%); }
+        ul { list-style: none; padding: 0; text-align: left; }
+        li { background: #fff; border-left: 5px solid var(--primary-pink); margin-bottom: 15px; padding: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        li.completed { border-left-color: #2ecc71; background-color: #f9fff9; }
 
-        /* Wishlist UI */
-        #wish-list { padding: 0; max-height: 300px; overflow-y: auto; }
-        #wish-list li { background: #f9f9f9; padding: 12px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--dark-pink); list-style: none; text-align: left; }
+        /* Memories Grid (Simple & Stable) */
+        .memories-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .memory-card { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
+        .memory-img { width: 100%; height: 150px; object-fit: cover; cursor: pointer; }
+        .memory-info { padding: 8px; font-size: 0.8rem; text-align: left; }
+
+        /* Photo Preview in Wishlist */
+        .photo-preview { width: 100%; max-height: 200px; object-fit: cover; border-radius: 10px; margin-top: 10px; }
+        .actions { margin-top: 10px; display: flex; gap: 10px; }
+        .btn-action { background: #eee; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; }
+
+        /* --- APPLE DOCK STYLES --- */
+        .dock-wrapper { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; }
+        .dock-container { 
+            display: flex; align-items: flex-end; gap: 15px; padding: 12px 20px; 
+            background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(15px); 
+            border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .dock-item { 
+            width: 50px; height: 50px; background: white; border-radius: 14px; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 1.5rem; cursor: pointer; 
+            transition: width 0.1s, height 0.1s, transform 0.1s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .dock-item.active { border: 2px solid var(--dark-pink); }
+        
+        .dock-label {
+            position: absolute; top: -35px; background: rgba(0,0,0,0.8); color: white;
+            padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; opacity: 0; pointer-events: none; transition: 0.2s;
+            white-space: nowrap;
+        }
+        .dock-item:hover .dock-label { opacity: 1; top: -45px; }
+
+        /* Tabs Logic */
+        .tab-content { display: none; animation: fadeIn 0.4s; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-<div class="main-wrapper" id="wishlist-wrapper">
+<div class="main-wrapper">
     <div class="container">
         <div class="anniversary-box">
             <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">Sudah Bersama Selama</span>
             <span id="days-counter" class="days-count">0 Hari</span>
             <div style="height: 1px; background: rgba(255,255,255,0.3); margin: 10px auto; width: 80%;"></div>
-            <span id="countdown-timer" class="countdown-text">Memuat Countdown...</span>
+            <span id="countdown-timer" class="countdown-text">Menghitung waktu...</span>
         </div>
 
-        <div id="tab-wishlist-content">
-            <h1 style="color: var(--dark-pink); font-family: 'Dancing Script'; margin: 0 0 15px 0;">Our Wishlist ❤️</h1>
-            <div style="display:flex; gap:8px; margin-bottom: 15px;">
-                <input type="text" id="wish-input" placeholder="Apa rencana kita?" style="flex:1; padding:10px; border-radius:10px; border:1px solid #ddd; outline:none;">
-                <button id="add-btn" style="padding:0 15px; border-radius:10px; background:var(--dark-pink); color:white; border:none; cursor:pointer;">+</button>
+        <div id="tab-wishlist" class="tab-content active">
+            <h1>Our Wishlist ❤️</h1>
+            <div class="input-group">
+                <input type="text" id="wish-input" placeholder="Tulis rencana kita...">
+                <button id="add-btn">Tambah</button>
             </div>
             <ul id="wish-list"></ul>
         </div>
-    </div>
-</div>
 
-<div id="tab-memories">
-    <div class="sphere-main" id="dome-main">
-        <div class="sphere" id="sphere-core"></div>
-        <div class="overlay-blur"></div>
+        <div id="tab-memories" class="tab-content">
+            <h1>Our Memories 📸</h1>
+            <div id="memories-list" class="memories-grid"></div>
+        </div>
     </div>
 </div>
 
 <div class="dock-wrapper">
-    <div class="dock-container">
-        <div class="dock-item active" onclick="switchTab('wishlist', this)">📝</div>
-        <div class="dock-item" onclick="switchTab('memories', this)">📸</div>
+    <div class="dock-container" id="main-dock">
+        <div class="dock-item active" onclick="switchTab('wishlist', this)">
+            📝<div class="dock-label">Wishlist</div>
+        </div>
+        <div class="dock-item" onclick="switchTab('memories', this)">
+            📸<div class="dock-label">Memories</div>
+        </div>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+    // 1. FIREBASE CONFIG
     const firebaseConfig = {
         apiKey: "AIzaSyDCnCs-qlRPdk3YUX8qptsEssnzaPkvOlo",
         authDomain: "ourlovejourney-4096d.firebaseapp.com",
@@ -101,22 +139,19 @@
         messagingSenderId: "415202896980",
         appId: "1:415202896980:web:8aa74a553f0bc7111091c1"
     };
+    const cloudName = "drduqvdxo", uploadPreset = "l1tm7wdn";
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const wishlistCol = collection(db, "wishlist");
 
-    // --- LOGIKA COUNTDOWN ANNIVERSARY ---
-    const startDate = new Date(2025, 2, 9); // 9 Maret 2025
-    function updateAnniversary() {
+    // 2. ANNIVERSARY LOGIC (9 Maret 2025)
+    const startDate = new Date(2025, 2, 9);
+    function updateTime() {
         const now = new Date();
-        
-        // 1. Sudah berapa hari jadian
-        const diffTime = Math.abs(now - startDate);
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        document.getElementById('days-counter').innerText = diffDays + " Hari";
+        const diff = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
+        document.getElementById('days-counter').innerText = diff + " Hari";
 
-        // 2. Countdown ke Anniversary berikutnya
-        let nextAnniv = new Date(now.getFullYear(), startDate.getMonth(), startDate.getDate());
+        let nextAnniv = new Date(now.getFullYear(), 2, 9);
         if (now > nextAnniv) nextAnniv.setFullYear(now.getFullYear() + 1);
         
         const t = nextAnniv - now;
@@ -124,65 +159,51 @@
         const h = Math.floor((t % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const m = Math.floor((t % (1000 * 60 * 60)) / (1000 * 60));
         const s = Math.floor((t % (1000 * 60)) / 1000);
-
-        document.getElementById('countdown-timer').innerText = 
-            `${d}H ${h}J ${m}M ${s}D Menuju Anniversary`;
+        
+        document.getElementById('countdown-timer').innerText = `${d} Hari ${h} Jam ${m} Menit ${s} Detik menuju Anniv`;
     }
-    setInterval(updateAnniversary, 1000);
-    updateAnniversary();
+    setInterval(updateTime, 1000);
+    updateTime();
 
-    // --- LOGIKA DOME & TABS (Tetap Sama) ---
-    const sphere = document.getElementById('sphere-core');
-    let rotation = { x: 0, y: 0 };
-    let isDragging = false;
-    let startPos = { x: 0, y: 0 };
-
-    function buildDome(data) {
-        sphere.innerHTML = '';
-        data.forEach((item, i) => {
-            const div = document.createElement('div');
-            div.className = 'item';
-            const rotY = (i % 10 * 36) - 180;
-            const rotX = (Math.floor(i / 10) * 25) - 40;
-            div.style.transform = `rotateY(${rotY}deg) rotateX(${rotX}deg) translateZ(600px)`;
-            div.innerHTML = `<div class="item__image"><img src="${item.photo}"></div>`;
-            sphere.appendChild(div);
+    // 3. DOCK INTERACTION (MAGNIFICATION)
+    const dock = document.getElementById('main-dock');
+    const items = document.querySelectorAll('.dock-item');
+    
+    dock.addEventListener('mousemove', (e) => {
+        items.forEach(item => {
+            const rect = item.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const dist = Math.abs(e.clientX - centerX);
+            // Makin dekat mouse, makin besar icon (Max 75px, Min 50px)
+            const scale = Math.max(50, 75 - (dist * 0.3)); 
+            
+            if(dist < 100) {
+                item.style.width = `${scale}px`;
+                item.style.height = `${scale}px`;
+                item.style.fontSize = `${1.5 * (scale/50)}rem`;
+            } else {
+                item.style.width = '50px';
+                item.style.height = '50px';
+                item.style.fontSize = '1.5rem';
+            }
         });
-    }
+    });
 
-    document.getElementById('dome-main').onpointerdown = (e) => { isDragging = true; startPos = { x: e.clientX, y: e.clientY }; };
-    window.onpointermove = (e) => {
-        if (!isDragging) return;
-        rotation.y += (e.clientX - startPos.x) * 0.15;
-        rotation.x -= (e.clientY - startPos.y) * 0.15;
-        rotation.x = Math.max(-15, Math.min(15, rotation.x));
-        sphere.style.transform = `translateZ(-600px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`;
-        startPos = { x: e.clientX, y: e.clientY };
-    };
-    window.onpointerup = () => isDragging = false;
+    dock.addEventListener('mouseleave', () => {
+        items.forEach(item => {
+            item.style.width = '50px';
+            item.style.height = '50px';
+            item.style.fontSize = '1.5rem';
+        });
+    });
 
+    // 4. APP LOGIC
     window.switchTab = (tab, el) => {
-        document.getElementById('wishlist-wrapper').style.display = (tab === 'wishlist') ? 'flex' : 'none';
-        document.getElementById('tab-memories').classList.toggle('active', tab === 'memories');
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         document.querySelectorAll('.dock-item').forEach(d => d.classList.remove('active'));
+        document.getElementById('tab-' + tab).classList.add('active');
         el.classList.add('active');
     };
 
-    onSnapshot(query(wishlistCol, orderBy("createdAt", "desc")), (snap) => {
-        const wishUI = document.getElementById('wish-list');
-        const memories = [];
-        wishUI.innerHTML = '';
-        snap.forEach(s => {
-            const d = { id: s.id, ...s.data() };
-            if (d.completed && d.photo) memories.push(d);
-            const li = document.createElement('li');
-            li.innerHTML = `<b>${d.text}</b><br><button onclick="window.mark('${d.id}', ${d.completed})">✔ Selesai</button>`;
-            wishUI.appendChild(li);
-        });
-        buildDome(memories);
-    });
-
-    window.mark = async (id, s) => { if(!s) confetti(); await updateDoc(doc(db, "wishlist", id), { completed: !s }); };
-</script>
-</body>
-</html>
+    const addBtn = document.getElementById('add-btn');
+    const input = document.getElementById('
