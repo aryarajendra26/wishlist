@@ -3,67 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Our Love Journey</title>
+    <title>Our Love Journey | Cloud Wishlist</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
-    
     <style>
         :root { --primary-pink: #ff85a1; --soft-pink: #fbb1bd; --dark-pink: #ff477e; --bg-color: #fff0f3; }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--bg-color); margin: 0; padding: 20px 0 100px 0; color: #444; display: flex; justify-content: center; overflow-x: hidden; }
+        .container { background: white; width: 95%; max-width: 500px; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; min-height: 80vh; margin-bottom: 60px; }
         
-        body, html { 
-            margin: 0; padding: 0; width: 100%; height: 100%; 
-            background-color: var(--bg-color); 
-            font-family: 'Poppins', sans-serif; 
-            overflow-x: hidden; 
-        }
+        .anniversary-box { background: linear-gradient(135deg, var(--primary-pink), var(--dark-pink)); color: white; padding: 20px; border-radius: 15px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(255, 71, 126, 0.3); }
+        .days-count { font-size: 1.8rem; font-weight: 700; display: block; margin: 5px 0; }
+        .days-label { font-size: 0.75rem; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+        .divider { height: 1px; background: rgba(255,255,255,0.3); margin: 10px auto; width: 80%; }
 
-        .main-wrapper { display: flex; justify-content: center; padding: 30px 0 100px 0; min-height: 100vh; }
+        h1 { font-family: 'Dancing Script', cursive; color: var(--dark-pink); font-size: 2.5rem; margin: 10px 0; }
+        .subtitle { font-size: 0.9rem; color: #888; margin-bottom: 20px; }
         
-        .container { 
-            background: white; width: 90%; max-width: 450px; 
-            padding: 30px; border-radius: 20px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
-            text-align: center; height: fit-content;
-        }
+        .tab-content { display: none; animation: fadeIn 0.5s; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Anniversary Box */
-        .anniversary-box { 
-            background: linear-gradient(135deg, var(--primary-pink), var(--dark-pink)); 
-            color: white; padding: 20px; border-radius: 15px; margin-bottom: 25px; 
-            box-shadow: 0 4px 15px rgba(255, 71, 126, 0.3);
-        }
-        .days-count { font-size: 2rem; font-weight: 700; display: block; margin: 5px 0; }
-        .countdown-text { font-size: 0.8rem; opacity: 0.9; font-weight: 500; }
-
-        /* Wishlist Items */
-        h1 { font-family: 'Dancing Script', cursive; color: var(--dark-pink); font-size: 2.5rem; margin: 0 0 15px 0; }
-        
-        .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
-        input[type="text"] { flex: 1; padding: 12px; border: 2px solid var(--soft-pink); border-radius: 10px; outline: none; }
-        button#add-btn { background: var(--primary-pink); color: white; border: none; padding: 0 20px; border-radius: 10px; cursor: pointer; font-weight: 600; }
-
-        ul { list-style: none; padding: 0; text-align: left; }
-        li { background: #fff; border-left: 5px solid var(--primary-pink); margin-bottom: 15px; padding: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        li.completed { border-left-color: #2ecc71; background-color: #f9fff9; }
-
-        /* Memories Grid (Simple & Stable) */
-        .memories-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .memory-card { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
-        .memory-img { width: 100%; height: 150px; object-fit: cover; cursor: pointer; }
-        .memory-info { padding: 8px; font-size: 0.8rem; text-align: left; }
-
-        /* Photo Preview in Wishlist */
-        .photo-preview { width: 100%; max-height: 200px; object-fit: cover; border-radius: 10px; margin-top: 10px; }
-        .actions { margin-top: 10px; display: flex; gap: 10px; }
-        .btn-action { background: #eee; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; }
-
-        /* --- APPLE DOCK STYLES --- */
+        /* --- APPLE DOCK STYLES (BARU) --- */
         .dock-wrapper { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; }
         .dock-container { 
             display: flex; align-items: flex-end; gap: 15px; padding: 12px 20px; 
-            background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(15px); 
+            background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(15px); 
             border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
         }
         .dock-item { 
             width: 50px; height: 50px; background: white; border-radius: 14px; 
@@ -82,12 +48,7 @@
         }
         .dock-item:hover .dock-label { opacity: 1; top: -45px; }
 
-        /* Tabs Logic */
-        .tab-content { display: none; animation: fadeIn 0.4s; }
-        .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* --- MUSIC PLAYER CSS (BARU) --- */
+        /* --- MUSIC PLAYER STYLES (BARU) --- */
         .music-player {
             position: fixed; top: 20px; right: 20px;
             width: 45px; height: 45px;
@@ -100,44 +61,66 @@
             transition: all 0.3s ease;
         }
         .music-player.playing {
-            background: var(--primary-pink);
-            color: white;
-            animation: spin 4s linear infinite;
-            border-color: white;
+            background: var(--primary-pink); color: white;
+            animation: spin 4s linear infinite; border-color: white;
             box-shadow: 0 0 15px var(--primary-pink);
         }
         @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* Standard Elements */
+        .input-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        input[type="text"] { padding: 12px; border: 2px solid var(--soft-pink); border-radius: 10px; outline: none; }
+        button#add-btn { background: var(--primary-pink); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 600; }
+        ul { list-style: none; padding: 0; text-align: left; }
+        li { background: #fff; border-left: 5px solid var(--primary-pink); margin-bottom: 15px; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        li.completed { border-left-color: #2ecc71; background-color: #f9fff9; opacity: 0.8; }
+        .wish-text { font-weight: 600; font-size: 1.1rem; display: block; }
+        .date-info { font-size: 0.75rem; color: #2ecc71; font-weight: bold; }
+        .photo-preview { width: 100%; max-height: 250px; object-fit: cover; border-radius: 10px; margin-top: 10px; }
+        .actions { display: flex; gap: 10px; margin-top: 10px; justify-content: flex-end; }
+        .btn-done, .btn-delete, .btn-photo { cursor: pointer; border: none; background: #f0f0f0; padding: 5px 10px; border-radius: 5px; font-size: 0.8rem; }
+        .loading-text { font-size: 0.8rem; color: var(--primary-pink); display: none; margin-top: 5px; font-weight: bold; }
+
+        .memories-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding-top: 10px; }
+        .memory-card { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 3px 10px rgba(0,0,0,0.1); position: relative; }
+        .memory-img { width: 100%; height: 150px; object-fit: cover; }
+        .memory-info { padding: 8px; font-size: 0.8rem; text-align: left; }
+        .memory-title { font-weight: 600; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .memory-date { color: #888; font-size: 0.7rem; }
     </style>
 </head>
 <body>
 
 <div class="music-player" id="music-control">🎵</div>
 <audio id="bg-music" loop>
-    <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+    <source src="https://music.youtube.com/watch?v=AySMGpXQ1Mo&list=RDAMPLOLAK5uy_kX7zbOz8GZRFRSIkfs0XH53qAUwVHvrZ8" type="audio/mpeg">
 </audio>
 
-<div class="main-wrapper">
-    <div class="container">
-        <div class="anniversary-box">
-            <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">Sudah Bersama Selama</span>
-            <span id="days-counter" class="days-count">0 Hari</span>
-            <div style="height: 1px; background: rgba(255,255,255,0.3); margin: 10px auto; width: 80%;"></div>
-            <span id="countdown-timer" class="countdown-text">Menghitung waktu...</span>
-        </div>
+<audio id="success-sound" src="https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3" preload="auto"></audio>
 
-        <div id="tab-wishlist" class="tab-content active">
-            <h1>Our Wishlist ❤️</h1>
-            <div class="input-group">
-                <input type="text" id="wish-input" placeholder="Tulis rencana kita...">
-                <button id="add-btn">Tambah</button>
-            </div>
-            <ul id="wish-list"></ul>
-        </div>
+<div class="container">
+    <div class="anniversary-box">
+        <span class="days-label">Sudah Bersama Selama</span>
+        <span id="days-counter" class="days-count">0 Hari</span>
+        <div class="divider"></div>
+        <span class="days-label">Menuju Anniversary Berikutnya</span>
+        <span id="next-anniv-counter" class="days-count" style="font-size: 1.4rem;">0 Hari Lagi</span>
+    </div>
 
-        <div id="tab-memories" class="tab-content">
-            <h1>Our Memories 📸</h1>
-            <div id="memories-list" class="memories-grid"></div>
+    <div id="tab-wishlist" class="tab-content active">
+        <h1>Our Wishlist ❤️</h1>
+        <p class="subtitle">Rencana seru kita ke depan..</p>
+        <div class="input-group">
+            <input type="text" id="wish-input" placeholder="Contoh: Dinner di tepi pantai...">
+            <button id="add-btn">Tambah Wishlist</button>
         </div>
+        <ul id="wish-list"></ul>
+    </div>
+
+    <div id="tab-memories" class="tab-content">
+        <h1>Our Memories 📸</h1>
+        <p class="subtitle">Kenangan indah yang sudah kita lalui..</p>
+        <div id="memories-list" class="memories-grid"></div>
     </div>
 </div>
 
@@ -156,23 +139,27 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // 1. FIREBASE CONFIG
     const firebaseConfig = {
         apiKey: "AIzaSyDCnCs-qlRPdk3YUX8qptsEssnzaPkvOlo",
         authDomain: "ourlovejourney-4096d.firebaseapp.com",
         projectId: "ourlovejourney-4096d",
         storageBucket: "ourlovejourney-4096d.appspot.com",
         messagingSenderId: "415202896980",
-        appId: "1:415202896980:web:8aa74a553f0bc7111091c1"
+        appId: "1:415202896980:web:8aa74a553f0bc7111091c1",
+        measurementId: "G-J8JMJ3J9W4"
     };
-    const cloudName = "drduqvdxo", uploadPreset = "l1tm7wdn";
+
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const wishlistCol = collection(db, "wishlist");
 
-    // --- MUSIC PLAYER LOGIC (BARU) ---
+    const cloudName = "drduqvdxo";
+    const uploadPreset = "l1tm7wdn";
+
+    // --- MUSIC PLAYER LOGIC ---
     const musicBtn = document.getElementById('music-control');
     const audio = document.getElementById('bg-music');
+    const successSound = document.getElementById('success-sound');
     let isPlaying = false;
 
     function toggleMusic() {
@@ -180,40 +167,14 @@
             audio.pause();
             musicBtn.classList.remove('playing');
         } else {
-            audio.play();
+            audio.play().catch(e => console.log("Interaksi user dibutuhkan untuk memutar audio"));
             musicBtn.classList.add('playing');
         }
         isPlaying = !isPlaying;
     }
-
     musicBtn.onclick = toggleMusic;
-    // Auto-play attempt on first click
-    document.body.addEventListener('click', () => {
-        if(!isPlaying) toggleMusic();
-    }, { once: true });
 
-    // 2. ANNIVERSARY LOGIC (9 Maret 2025)
-    const startDate = new Date(2025, 2, 9);
-    function updateTime() {
-        const now = new Date();
-        const diff = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
-        document.getElementById('days-counter').innerText = diff + " Hari";
-
-        let nextAnniv = new Date(now.getFullYear(), 2, 9);
-        if (now > nextAnniv) nextAnniv.setFullYear(now.getFullYear() + 1);
-        
-        const t = nextAnniv - now;
-        const d = Math.floor(t / (1000 * 60 * 60 * 24));
-        const h = Math.floor((t % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const m = Math.floor((t % (1000 * 60 * 60)) / (1000 * 60));
-        const s = Math.floor((t % (1000 * 60)) / 1000);
-        
-        document.getElementById('countdown-timer').innerText = `${d} Hari ${h} Jam ${m} Menit ${s} Detik menuju Anniv`;
-    }
-    setInterval(updateTime, 1000);
-    updateTime();
-
-    // 3. DOCK INTERACTION (MAGNIFICATION)
+    // --- APPLE DOCK LOGIC ---
     const dock = document.getElementById('main-dock');
     const items = document.querySelectorAll('.dock-item');
     
@@ -244,75 +205,150 @@
         });
     });
 
-    // 4. APP LOGIC
-    window.switchTab = (tab, el) => {
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        document.querySelectorAll('.dock-item').forEach(d => d.classList.remove('active'));
-        document.getElementById('tab-' + tab).classList.add('active');
+    window.switchTab = (tabName, el) => {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.dock-item').forEach(n => n.classList.remove('active'));
+        document.getElementById('tab-' + tabName).classList.add('active');
         el.classList.add('active');
     };
 
-    const addBtn = document.getElementById('add-btn');
+    const startDate = new Date(2025, 2, 9);
+    function updateCounters() {
+        const now = new Date();
+        const diffInDays = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
+        document.getElementById('days-counter').innerText = diffInDays + " Hari";
+        let nextAnniv = new Date(now.getFullYear(), startDate.getMonth(), startDate.getDate());
+        if (now > nextAnniv) nextAnniv.setFullYear(now.getFullYear() + 1);
+        document.getElementById('next-anniv-counter').innerText = Math.ceil((nextAnniv - now) / (1000 * 60 * 60 * 24)) + " Hari Lagi";
+    }
+    updateCounters();
+
     const input = document.getElementById('wish-input');
-    
+    const addBtn = document.getElementById('add-btn');
+    const wishListUI = document.getElementById('wish-list');
+    const memoriesUI = document.getElementById('memories-list');
+
     addBtn.onclick = async () => {
-        if (!input.value) return;
-        await addDoc(wishlistCol, { text: input.value, completed: false, photo: null, createdAt: Date.now() });
+        if (input.value === '') return;
+        await addDoc(wishlistCol, { 
+            text: input.value, 
+            completed: false, 
+            date: null, 
+            photo: null, 
+            createdAt: Date.now() 
+        });
         input.value = '';
     };
 
-    onSnapshot(query(wishlistCol, orderBy("createdAt", "desc")), (snap) => {
-        const wishUI = document.getElementById('wish-list');
-        const memoUI = document.getElementById('memories-list');
-        wishUI.innerHTML = ''; memoUI.innerHTML = '';
-
-        snap.forEach(s => {
-            const d = { id: s.id, ...s.data() };
-            
-            // Render Wishlist
-            const li = document.createElement('li');
-            if (d.completed) li.classList.add('completed');
-            li.innerHTML = `
-                <div style="font-weight:600; font-size:1.1rem">${d.text}</div>
-                ${d.photo ? `<img src="${d.photo}" class="photo-preview">` : ''}
-                <div id="loader-${d.id}" style="display:none; color:var(--dark-pink); font-size:0.8rem">Sedang mengunggah...</div>
-                <div class="actions">
-                    <button class="btn-action" onclick="document.getElementById('f-${d.id}').click()">📷 Foto</button>
-                    <button class="btn-action" onclick="window.mark('${d.id}', ${d.completed})">✔ Selesai</button>
-                    <button class="btn-action" onclick="window.del('${d.id}')">✖ Hapus</button>
-                    <input type="file" id="f-${d.id}" style="display:none" onchange="window.upload(this.files[0], '${d.id}')">
-                </div>
-            `;
-            wishUI.appendChild(li);
-
-            // Render Memories (Only Completed + Has Photo)
-            if (d.completed && d.photo) {
-                const mem = document.createElement('div');
-                mem.className = 'memory-card';
-                mem.innerHTML = `
-                    <img src="${d.photo}" class="memory-img" onclick="window.open('${d.photo}')">
-                    <div class="memory-info"><b>${d.text}</b></div>
-                `;
-                memoUI.appendChild(mem);
-            }
+    onSnapshot(query(wishlistCol, orderBy("createdAt", "desc")), (snapshot) => {
+        wishListUI.innerHTML = '';
+        memoriesUI.innerHTML = '';
+        snapshot.forEach((doc) => {
+            const data = { id: doc.id, ...doc.data() };
+            renderWish(data);
+            if(data.completed && data.photo) renderMemory(data);
         });
     });
 
-    window.upload = async (file, id) => {
+    function renderWish(wish) {
+        const li = document.createElement('li');
+        if (wish.completed) li.classList.add('completed');
+        
+        // FIX NULL DISPLAY: Menggunakan operator logika untuk cek tanggal
+        const tanggalSelesai = wish.date ? `✅ Selesai: ${wish.date}` : '';
+
+        li.innerHTML = `
+            <div class="wish-content">
+                <span class="wish-text">${wish.text}</span>
+                <span class="date-info">${tanggalSelesai}</span>
+                ${wish.photo ? `<img src="${wish.photo}" class="photo-preview">` : ''}
+                <div id="loader-${wish.id}" class="loading-text">Mencadangkan kenangan ke awan... ☁️</div>
+            </div>
+            <div class="actions">
+                <input type="file" id="file-${wish.id}" style="display:none" accept="image/*">
+                <button class="btn-photo" onclick="document.getElementById('file-${wish.id}').click()">📷 Foto</button>
+                <button class="btn-done" onclick="markDone('${wish.id}', ${wish.completed})">✔</button>
+                <button class="btn-delete" onclick="deleteItem('${wish.id}')">✖</button>
+            </div>
+        `;
+        wishListUI.appendChild(li);
+        
+        const fileInput = document.getElementById(`file-${wish.id}`);
+        if(fileInput) {
+            fileInput.onchange = (e) => window.uploadPhoto(e.target.files[0], wish.id);
+        }
+    }
+
+    function renderMemory(wish) {
+        const div = document.createElement('div');
+        div.className = 'memory-card';
+        
+        // FIX NULL DISPLAY PADA MEMORIES
+        const tanggalMemories = wish.date ? wish.date : ''; 
+
+        div.innerHTML = `
+            <img src="${wish.photo}" class="memory-img" onclick="window.open('${wish.photo}')">
+            <div class="memory-info">
+                <span class="memory-title">${wish.text}</span>
+                <span class="memory-date">${tanggalMemories}</span>
+            </div>
+        `;
+        memoriesUI.appendChild(div);
+    }
+
+    window.uploadPhoto = async (file, id) => {
         if (!file) return;
-        document.getElementById(`loader-${id}`).style.display = 'block';
-        const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', uploadPreset);
+        const loader = document.getElementById(`loader-${id}`);
+        loader.style.display = 'block';
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', uploadPreset);
+
         try {
-            const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, { method: 'POST', body: fd });
-            const json = await res.json();
-            await updateDoc(doc(db, "wishlist", id), { photo: json.secure_url });
-        } catch(e) { alert("Gagal upload"); }
-        finally { document.getElementById(`loader-${id}`).style.display = 'none'; }
+            const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+
+            if (result.secure_url) {
+                const url = result.secure_url;
+                await updateDoc(doc(db, "wishlist", id), { photo: url });
+            } else {
+                console.error("Cloudinary Error:", result);
+                alert("Gagal mengunggah.");
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Terjadi kesalahan saat mengunggah.");
+        } finally {
+            loader.style.display = 'none';
+        }
     };
 
-    window.mark = async (id, s) => { if(!s) confetti(); await updateDoc(doc(db, "wishlist", id), { completed: !s }); };
-    window.del = async (id) => { if(confirm("Hapus?")) await deleteDoc(doc(db, "wishlist", id)); };
+    window.markDone = async (id, currentStatus) => {
+        if (!currentStatus) {
+            // FIX SOUND: Memaksa play dengan catch error
+            successSound.currentTime = 0;
+            successSound.play().then(() => {
+                // Audio berhasil diputar
+            }).catch(e => {
+                console.log("Audio play blocked by browser policy (first interaction needed)");
+            });
 
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#ff85a1', '#fbb1bd', '#ff477e'] });
+        }
+        const t = new Date();
+        await updateDoc(doc(db, "wishlist", id), { 
+            completed: !currentStatus, 
+            date: !currentStatus ? `${t.getDate()}/${t.getMonth()+1}/${t.getFullYear()}` : null 
+        });
+    };
+
+    window.deleteItem = async (id) => { 
+        if(confirm("Hapus kenangan ini?")) await deleteDoc(doc(db, "wishlist", id)); 
+    };
 </script>
 </body>
 </html>
