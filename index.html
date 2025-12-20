@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Our Love Journey | Dome Gallery</title>
+    <title>Our Love Journey | Anniversary Countdown</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
     
     <style>
         :root { 
             --primary-pink: #ff85a1; --soft-pink: #fbb1bd; --dark-pink: #ff477e;
-            --radius: 600px; --segments: 35;
+            --radius: 600px;
         }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; font-family: 'Poppins', sans-serif; overflow: hidden; }
 
@@ -23,74 +23,55 @@
             margin-top: 40px; height: fit-content;
         }
 
-        /* --- DOCK STYLES (Apple Style) --- */
+        /* Anniversary Box dengan Countdown */
+        .anniversary-box { 
+            background: linear-gradient(135deg, var(--primary-pink), var(--dark-pink)); 
+            color: white; padding: 20px; border-radius: 15px; margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(255, 71, 126, 0.4);
+        }
+        .days-count { font-size: 2rem; font-weight: 700; display: block; margin: 5px 0; }
+        .countdown-text { font-size: 0.85rem; font-weight: 600; opacity: 0.9; }
+
+        /* Dock Nav Styles */
         .dock-wrapper { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 1000; }
-        .dock-container { 
-            display: flex; align-items: flex-end; gap: 12px; padding: 10px 15px; 
-            background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(15px); 
-            border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        .dock-item { 
-            width: 45px; height: 45px; background: white; border-radius: 12px; 
-            display: flex; align-items: center; justify-content: center; 
-            font-size: 1.4rem; cursor: pointer; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-        }
-        .dock-item:hover { transform: scale(1.4) translateY(-10px); }
+        .dock-container { display: flex; align-items: flex-end; gap: 12px; padding: 10px 15px; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(15px); border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.3); }
+        .dock-item { width: 45px; height: 45px; background: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; cursor: pointer; transition: 0.2s; }
         .dock-item.active { border: 2px solid var(--dark-pink); box-shadow: 0 0 15px var(--primary-pink); }
 
-        /* --- DOME GALLERY CSS --- */
+        /* Dome Gallery Styles */
         #tab-memories { position: fixed; top: 0; left: 0; width: 100%; height: 100%; perspective: 1200px; overflow: hidden; display: none; z-index: 5; }
         #tab-memories.active { display: block; }
-
         .sphere-main { width: 100%; height: 100%; position: relative; display: flex; align-items: center; justify-content: center; touch-action: none; }
-        .sphere { 
-            position: absolute; transform-style: preserve-3d; 
-            transition: transform 0.1s ease-out; width: 0; height: 0;
-        }
-        .item { 
-            position: absolute; transform-style: preserve-3d; 
-            left: 50%; top: 50%; width: 90px; height: 120px; margin-left: -45px; margin-top: -60px;
-        }
-        .item__image { 
-            width: 100%; height: 100%; border-radius: 12px; overflow: hidden; 
-            box-shadow: 0 5px 20px rgba(0,0,0,0.6); cursor: zoom-in;
-            transition: transform 0.3s;
-        }
-        .item__image img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+        .sphere { position: absolute; transform-style: preserve-3d; transition: transform 0.1s ease-out; }
+        .item { position: absolute; transform-style: preserve-3d; left: 50%; top: 50%; width: 90px; height: 120px; margin-left: -45px; margin-top: -60px; }
+        .item__image { width: 100%; height: 100%; border-radius: 12px; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.6); }
+        .item__image img { width: 100%; height: 100%; object-fit: cover; }
+        .overlay-blur { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle, transparent 20%, rgba(0,0,0,0.9) 100%); }
 
-        .overlay-blur { 
-            position: absolute; inset: 0; pointer-events: none;
-            background: radial-gradient(circle, transparent 20%, rgba(0,0,0,0.9) 100%);
-        }
-
-        /* Wishlist Styles */
-        #wish-list li { 
-            background: #f9f9f9; padding: 15px; border-radius: 12px; 
-            margin-bottom: 12px; border-left: 6px solid var(--dark-pink);
-            list-style: none; text-align: left;
-        }
-        .photo-btn { background: #eee; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-right: 5px; }
-
-        /* Fullscreen Viewer */
-        .viewer-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none;
-            z-index: 2000; align-items: center; justify-content: center; transition: 0.3s;
-        }
-        .viewer-overlay.active { display: flex; }
-        .viewer-overlay img { max-width: 85%; max-height: 85%; border-radius: 15px; box-shadow: 0 0 40px var(--dark-pink); }
+        /* Wishlist UI */
+        #wish-list { padding: 0; max-height: 300px; overflow-y: auto; }
+        #wish-list li { background: #f9f9f9; padding: 12px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--dark-pink); list-style: none; text-align: left; }
     </style>
 </head>
 <body>
 
 <div class="main-wrapper" id="wishlist-wrapper">
     <div class="container">
-        <h1 style="color: var(--dark-pink); font-family: 'Dancing Script';">Our Wishlist ❤️</h1>
-        <div style="display:flex; gap:10px; margin-bottom: 20px;">
-            <input type="text" id="wish-input" placeholder="Apa rencana kita?" style="flex:1; padding:12px; border-radius:12px; border:1px solid #ddd; outline:none;">
-            <button id="add-btn" style="padding:0 20px; border-radius:12px; background:var(--dark-pink); color:white; border:none; font-weight:bold; cursor:pointer;">+</button>
+        <div class="anniversary-box">
+            <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">Sudah Bersama Selama</span>
+            <span id="days-counter" class="days-count">0 Hari</span>
+            <div style="height: 1px; background: rgba(255,255,255,0.3); margin: 10px auto; width: 80%;"></div>
+            <span id="countdown-timer" class="countdown-text">Memuat Countdown...</span>
         </div>
-        <ul id="wish-list"></ul>
+
+        <div id="tab-wishlist-content">
+            <h1 style="color: var(--dark-pink); font-family: 'Dancing Script'; margin: 0 0 15px 0;">Our Wishlist ❤️</h1>
+            <div style="display:flex; gap:8px; margin-bottom: 15px;">
+                <input type="text" id="wish-input" placeholder="Apa rencana kita?" style="flex:1; padding:10px; border-radius:10px; border:1px solid #ddd; outline:none;">
+                <button id="add-btn" style="padding:0 15px; border-radius:10px; background:var(--dark-pink); color:white; border:none; cursor:pointer;">+</button>
+            </div>
+            <ul id="wish-list"></ul>
+        </div>
     </div>
 </div>
 
@@ -101,12 +82,8 @@
     </div>
 </div>
 
-<div class="viewer-overlay" id="img-viewer">
-    <img id="viewer-img" src="">
-</div>
-
 <div class="dock-wrapper">
-    <div class="dock-container" id="main-dock">
+    <div class="dock-container">
         <div class="dock-item active" onclick="switchTab('wishlist', this)">📝</div>
         <div class="dock-item" onclick="switchTab('memories', this)">📸</div>
     </div>
@@ -114,9 +91,8 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // --- FIREBASE & CLOUDINARY CONFIG ---
     const firebaseConfig = {
         apiKey: "AIzaSyDCnCs-qlRPdk3YUX8qptsEssnzaPkvOlo",
         authDomain: "ourlovejourney-4096d.firebaseapp.com",
@@ -125,50 +101,65 @@
         messagingSenderId: "415202896980",
         appId: "1:415202896980:web:8aa74a553f0bc7111091c1"
     };
-    const cloudName = "drduqvdxo", uploadPreset = "l1tm7wdn";
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const wishlistCol = collection(db, "wishlist");
 
-    // --- DOME GALLERY BUILDER ---
+    // --- LOGIKA COUNTDOWN ANNIVERSARY ---
+    const startDate = new Date(2025, 2, 9); // 9 Maret 2025
+    function updateAnniversary() {
+        const now = new Date();
+        
+        // 1. Sudah berapa hari jadian
+        const diffTime = Math.abs(now - startDate);
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        document.getElementById('days-counter').innerText = diffDays + " Hari";
+
+        // 2. Countdown ke Anniversary berikutnya
+        let nextAnniv = new Date(now.getFullYear(), startDate.getMonth(), startDate.getDate());
+        if (now > nextAnniv) nextAnniv.setFullYear(now.getFullYear() + 1);
+        
+        const t = nextAnniv - now;
+        const d = Math.floor(t / (1000 * 60 * 60 * 24));
+        const h = Math.floor((t % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const m = Math.floor((t % (1000 * 60 * 60)) / (1000 * 60));
+        const s = Math.floor((t % (1000 * 60)) / 1000);
+
+        document.getElementById('countdown-timer').innerText = 
+            `${d}H ${h}J ${m}M ${s}D Menuju Anniversary`;
+    }
+    setInterval(updateAnniversary, 1000);
+    updateAnniversary();
+
+    // --- LOGIKA DOME & TABS (Tetap Sama) ---
     const sphere = document.getElementById('sphere-core');
-    const domeMain = document.getElementById('dome-main');
     let rotation = { x: 0, y: 0 };
     let isDragging = false;
     let startPos = { x: 0, y: 0 };
 
     function buildDome(data) {
         sphere.innerHTML = '';
-        const radius = 600;
-        const totalItems = data.length;
-        
-        data.forEach((itemData, i) => {
-            const item = document.createElement('div');
-            item.className = 'item';
-            
-            // Logika Grid Dome
-            const row = Math.floor(i / 10);
-            const col = i % 10;
-            const rotY = (col * 36) - 180;
-            const rotX = (row * 25) - 50;
-
-            item.style.transform = `rotateY(${rotY}deg) rotateX(${rotX}deg) translateZ(${radius}px)`;
-            item.innerHTML = `<div class="item__image" onclick="viewFull('${itemData.photo}')"><img src="${itemData.photo}"></div>`;
-            sphere.appendChild(item);
+        data.forEach((item, i) => {
+            const div = document.createElement('div');
+            div.className = 'item';
+            const rotY = (i % 10 * 36) - 180;
+            const rotX = (Math.floor(i / 10) * 25) - 40;
+            div.style.transform = `rotateY(${rotY}deg) rotateX(${rotX}deg) translateZ(600px)`;
+            div.innerHTML = `<div class="item__image"><img src="${item.photo}"></div>`;
+            sphere.appendChild(div);
         });
     }
 
-    // --- INTERACTION ---
-    domeMain.addEventListener('pointerdown', (e) => { isDragging = true; startPos = { x: e.clientX, y: e.clientY }; });
-    window.addEventListener('pointermove', (e) => {
+    document.getElementById('dome-main').onpointerdown = (e) => { isDragging = true; startPos = { x: e.clientX, y: e.clientY }; };
+    window.onpointermove = (e) => {
         if (!isDragging) return;
         rotation.y += (e.clientX - startPos.x) * 0.15;
         rotation.x -= (e.clientY - startPos.y) * 0.15;
         rotation.x = Math.max(-15, Math.min(15, rotation.x));
         sphere.style.transform = `translateZ(-600px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`;
         startPos = { x: e.clientX, y: e.clientY };
-    });
-    window.addEventListener('pointerup', () => isDragging = false);
+    };
+    window.onpointerup = () => isDragging = false;
 
     window.switchTab = (tab, el) => {
         document.getElementById('wishlist-wrapper').style.display = (tab === 'wishlist') ? 'flex' : 'none';
@@ -177,50 +168,19 @@
         el.classList.add('active');
     };
 
-    window.viewFull = (src) => {
-        document.getElementById('viewer-img').src = src;
-        document.getElementById('img-viewer').classList.add('active');
-    };
-    document.getElementById('img-viewer').onclick = () => document.getElementById('img-viewer').classList.remove('active');
-
-    // --- DATA SYNC ---
-    const wishInput = document.getElementById('wish-input'), addBtn = document.getElementById('add-btn');
-    addBtn.onclick = async () => {
-        if (!wishInput.value) return;
-        await addDoc(wishlistCol, { text: wishInput.value, completed: false, photo: null, createdAt: Date.now() });
-        wishInput.value = '';
-    };
-
     onSnapshot(query(wishlistCol, orderBy("createdAt", "desc")), (snap) => {
         const wishUI = document.getElementById('wish-list');
         const memories = [];
         wishUI.innerHTML = '';
-        
         snap.forEach(s => {
             const d = { id: s.id, ...s.data() };
             if (d.completed && d.photo) memories.push(d);
-            
             const li = document.createElement('li');
-            li.innerHTML = `
-                <div style="font-weight:600; margin-bottom:8px;">${d.text}</div>
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <button class="photo-btn" onclick="document.getElementById('f-${d.id}').click()">📷 Foto</button>
-                    <button class="photo-btn" onclick="window.mark('${d.id}', ${d.completed})">✔ Selesai</button>
-                    <input type="file" id="f-${d.id}" style="display:none" onchange="window.upload(this.files[0], '${d.id}')">
-                </div>
-                ${d.photo ? `<img src="${d.photo}" style="width:80px; height:80px; object-fit:cover; border-radius:8px; margin-top:10px; border:2px solid var(--primary-pink)">` : ''}
-            `;
+            li.innerHTML = `<b>${d.text}</b><br><button onclick="window.mark('${d.id}', ${d.completed})">✔ Selesai</button>`;
             wishUI.appendChild(li);
         });
         buildDome(memories);
     });
-
-    window.upload = async (file, id) => {
-        const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', uploadPreset);
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, { method: 'POST', body: fd });
-        const json = await res.json();
-        await updateDoc(doc(db, "wishlist", id), { photo: json.secure_url });
-    };
 
     window.mark = async (id, s) => { if(!s) confetti(); await updateDoc(doc(db, "wishlist", id), { completed: !s }); };
 </script>
