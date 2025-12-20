@@ -92,8 +92,9 @@
 <body>
 
 <div class="music-player" id="music-control">🎵</div>
+
 <audio id="bg-music" loop>
-    <source src="https://music.youtube.com/watch?v=AySMGpXQ1Mo&list=RDAMPLOLAK5uy_kX7zbOz8GZRFRSIkfs0XH53qAUwVHvrZ8" type="audio/mpeg">
+    <source src="https://assets.mixkit.co/music/preview/mixkit-love-story-635.mp3" type="audio/mpeg">
 </audio>
 
 <audio id="success-sound" src="https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3" preload="auto"></audio>
@@ -167,11 +168,17 @@
             audio.pause();
             musicBtn.classList.remove('playing');
         } else {
-            audio.play().catch(e => console.log("Interaksi user dibutuhkan untuk memutar audio"));
-            musicBtn.classList.add('playing');
+            audio.play().then(() => {
+                musicBtn.classList.add('playing');
+            }).catch(e => {
+                console.log("Interaksi user dibutuhkan untuk memutar audio", e);
+                alert("Silakan klik di area halaman terlebih dahulu jika musik tidak menyala.");
+            });
         }
         isPlaying = !isPlaying;
     }
+    
+    // Pasang event listener
     musicBtn.onclick = toggleMusic;
 
     // --- APPLE DOCK LOGIC ---
@@ -254,7 +261,6 @@
         const li = document.createElement('li');
         if (wish.completed) li.classList.add('completed');
         
-        // FIX NULL DISPLAY: Menggunakan operator logika untuk cek tanggal
         const tanggalSelesai = wish.date ? `✅ Selesai: ${wish.date}` : '';
 
         li.innerHTML = `
@@ -283,7 +289,6 @@
         const div = document.createElement('div');
         div.className = 'memory-card';
         
-        // FIX NULL DISPLAY PADA MEMORIES
         const tanggalMemories = wish.date ? wish.date : ''; 
 
         div.innerHTML = `
@@ -329,12 +334,9 @@
 
     window.markDone = async (id, currentStatus) => {
         if (!currentStatus) {
-            // FIX SOUND: Memaksa play dengan catch error
             successSound.currentTime = 0;
-            successSound.play().then(() => {
-                // Audio berhasil diputar
-            }).catch(e => {
-                console.log("Audio play blocked by browser policy (first interaction needed)");
+            successSound.play().catch(e => {
+                console.log("Audio play blocked by browser policy");
             });
 
             confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#ff85a1', '#fbb1bd', '#ff477e'] });
