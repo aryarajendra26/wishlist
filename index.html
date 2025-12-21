@@ -76,18 +76,20 @@
         li.completed { border-left-color: #2ecc71; background-color: #f9fff9; opacity: 0.8; }
         .wish-text { font-weight: 600; font-size: 1.1rem; display: block; }
         .date-info { font-size: 0.75rem; color: #2ecc71; font-weight: bold; }
-        .photo-preview { width: 100%; max-height: 250px; object-fit: cover; border-radius: 10px; margin-top: 10px; }
+        .photo-preview { width: 100%; max-height: 250px; object-fit: cover; border-radius: 10px; margin-top: 10px; cursor: pointer; transition: transform 0.2s; }
+        .photo-preview:hover { transform: scale(1.02); }
         
         .loading-text { font-size: 0.8rem; color: var(--primary-pink); display: none; margin-top: 5px; font-weight: bold; }
 
         .memories-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding-top: 10px; }
-        .memory-card { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 3px 10px rgba(0,0,0,0.1); position: relative; }
+        .memory-card { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 3px 10px rgba(0,0,0,0.1); position: relative; cursor: pointer; transition: transform 0.2s; }
+        .memory-card:hover { transform: translateY(-3px); }
         .memory-img { width: 100%; height: 150px; object-fit: cover; }
         .memory-info { padding: 8px; font-size: 0.8rem; text-align: left; }
         .memory-title { font-weight: 600; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .memory-date { color: #888; font-size: 0.7rem; }
 
-        /* --- MODERN BUTTON STYLES (BAGIAN YANG DIUBAH) --- */
+        /* --- MODERN BUTTON STYLES --- */
         .actions { 
             display: flex; 
             gap: 12px; 
@@ -96,7 +98,6 @@
             align-items: center;
         }
 
-        /* Tombol Foto: Pill Shape */
         .btn-photo { 
             cursor: pointer; 
             border: 1px solid #f0f0f0; 
@@ -121,7 +122,6 @@
             border-color: var(--soft-pink);
         }
 
-        /* Tombol Bulat (Done & Delete) */
         .btn-done, .btn-delete { 
             cursor: pointer; 
             border: none; 
@@ -135,29 +135,41 @@
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        /* Tombol Selesai: Hijau Segar */
-        .btn-done {
-            background: #e3f9e5;
-            color: #2ecc71;
-        }
+        .btn-done { background: #e3f9e5; color: #2ecc71; }
         .btn-done:hover {
-            background: #2ecc71;
-            color: white;
-            transform: scale(1.15);
+            background: #2ecc71; color: white; transform: scale(1.15);
             box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4);
         }
 
-        /* Tombol Hapus: Merah Lembut */
-        .btn-delete {
-            background: #ffe5e5;
-            color: #ff4757;
-        }
+        .btn-delete { background: #ffe5e5; color: #ff4757; }
         .btn-delete:hover {
-            background: #ff4757;
-            color: white;
-            transform: scale(1.15) rotate(90deg);
+            background: #ff4757; color: white; transform: scale(1.15) rotate(90deg);
             box-shadow: 0 4px 12px rgba(255, 71, 87, 0.4);
         }
+
+        /* --- LIGHTBOX (POP-UP FOTO BARU) --- */
+        .lightbox {
+            display: none; position: fixed; z-index: 9999;
+            left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            justify-content: center; align-items: center;
+            opacity: 0; transition: opacity 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        .lightbox.show { opacity: 1; }
+        .lightbox-content {
+            max-width: 90%; max-height: 85vh;
+            border-radius: 12px; box-shadow: 0 0 30px rgba(255,133,161,0.3);
+            transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 2px solid white;
+        }
+        .lightbox.show .lightbox-content { transform: scale(1); }
+        .close-lightbox {
+            position: absolute; top: 20px; right: 30px;
+            color: white; font-size: 40px; cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .close-lightbox:hover { transform: rotate(90deg); color: var(--primary-pink); }
     </style>
 </head>
 <body>
@@ -169,6 +181,11 @@
 </audio>
 
 <audio id="success-sound" src="https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3" preload="auto"></audio>
+
+<div id="lightbox" class="lightbox" onclick="closeLightbox()">
+    <span class="close-lightbox">&times;</span>
+    <img class="lightbox-content" id="lightbox-img">
+</div>
 
 <div class="container">
     <div class="anniversary-box">
@@ -249,8 +266,24 @@
         isPlaying = !isPlaying;
     }
     
-    // Pasang event listener
     musicBtn.onclick = toggleMusic;
+
+    // --- LIGHTBOX LOGIC (FITUR BARU) ---
+    window.openLightbox = (url) => {
+        const lb = document.getElementById('lightbox');
+        const img = document.getElementById('lightbox-img');
+        img.src = url;
+        lb.style.display = 'flex';
+        // Sedikit delay agar animasi CSS berjalan
+        setTimeout(() => lb.classList.add('show'), 10);
+    };
+
+    window.closeLightbox = () => {
+        const lb = document.getElementById('lightbox');
+        lb.classList.remove('show');
+        // Tunggu animasi selesai baru hide display
+        setTimeout(() => { lb.style.display = 'none'; }, 300);
+    };
 
     // --- APPLE DOCK LOGIC ---
     const dock = document.getElementById('main-dock');
@@ -334,11 +367,12 @@
         
         const tanggalSelesai = wish.date ? `✅ Selesai: ${wish.date}` : '';
 
+        // UPDATE: Photo preview sekarang memanggil openLightbox
         li.innerHTML = `
             <div class="wish-content">
                 <span class="wish-text">${wish.text}</span>
                 <span class="date-info">${tanggalSelesai}</span>
-                ${wish.photo ? `<img src="${wish.photo}" class="photo-preview">` : ''}
+                ${wish.photo ? `<img src="${wish.photo}" class="photo-preview" onclick="openLightbox('${wish.photo}')">` : ''}
                 <div id="loader-${wish.id}" class="loading-text">Mencadangkan kenangan ke awan... ☁️</div>
             </div>
             <div class="actions">
@@ -362,13 +396,17 @@
         
         const tanggalMemories = wish.date ? wish.date : ''; 
 
+        // UPDATE: Memory card sekarang memanggil openLightbox
         div.innerHTML = `
-            <img src="${wish.photo}" class="memory-img" onclick="window.open('${wish.photo}')">
+            <img src="${wish.photo}" class="memory-img">
             <div class="memory-info">
                 <span class="memory-title">${wish.text}</span>
                 <span class="memory-date">${tanggalMemories}</span>
             </div>
         `;
+        // Tambahkan event click ke seluruh kartu
+        div.onclick = () => window.openLightbox(wish.photo);
+
         memoriesUI.appendChild(div);
     }
 
