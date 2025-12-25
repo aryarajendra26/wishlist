@@ -1,9 +1,316 @@
-<script type="module">
-    // --- 1. IMPORT FIREBASE (JANGAN DIUBAH) ---
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Love Journey | Cloud Wishlist</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    
+    <style>
+        :root { --primary-pink: #ff85a1; --soft-pink: #fbb1bd; --dark-pink: #ff477e; --bg-color: #fff0f3; }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--bg-color); margin: 0; padding: 20px 0 100px 0; color: #444; display: flex; justify-content: center; overflow-x: hidden; }
+        .container { background: white; width: 95%; max-width: 500px; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; min-height: 80vh; margin-bottom: 60px; }
+        
+        .anniversary-box { background: linear-gradient(135deg, var(--primary-pink), var(--dark-pink)); color: white; padding: 20px; border-radius: 15px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(255, 71, 126, 0.3); }
+        .days-count { font-size: 1.8rem; font-weight: 700; display: block; margin: 5px 0; }
+        .days-label { font-size: 0.75rem; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+        .divider { height: 1px; background: rgba(255,255,255,0.3); margin: 10px auto; width: 80%; }
 
-    // --- 2. KONFIGURASI FIREBASE ---
+        h1 { font-family: 'Dancing Script', cursive; color: var(--dark-pink); font-size: 2.5rem; margin: 10px 0; }
+        .subtitle { font-size: 0.9rem; color: #888; margin-bottom: 20px; }
+        
+        /* Tab Animation */
+        .tab-content { display: none; animation: fadeIn 0.5s; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- APPLE DOCK STYLES --- */
+        .dock-wrapper { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; }
+        .dock-container { 
+            display: flex; align-items: flex-end; gap: 10px; padding: 12px 20px; 
+            background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(15px); 
+            border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        .dock-item { 
+            width: 50px; height: 50px; background: white; border-radius: 14px; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 1.5rem; cursor: pointer; 
+            transition: width 0.1s, height 0.1s, transform 0.1s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .dock-item.active { border: 2px solid var(--dark-pink); }
+        
+        .dock-label {
+            position: absolute; top: -35px; background: rgba(0,0,0,0.8); color: white;
+            padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; opacity: 0; pointer-events: none; transition: 0.2s;
+            white-space: nowrap;
+        }
+        .dock-item:hover .dock-label { opacity: 1; top: -45px; }
+
+        /* --- MUSIC PLAYER --- */
+        .music-player {
+            position: fixed; top: 20px; right: 20px;
+            width: 45px; height: 45px;
+            background: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            cursor: pointer; z-index: 2000;
+            border: 2px solid var(--primary-pink);
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+        .music-player.playing {
+            background: var(--primary-pink); color: white;
+            animation: spin 4s linear infinite; border-color: white;
+            box-shadow: 0 0 15px var(--primary-pink);
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* Standard Elements */
+        .input-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        input[type="text"] { padding: 12px; border: 2px solid var(--soft-pink); border-radius: 10px; outline: none; }
+        button { background: var(--primary-pink); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 600; }
+        ul { list-style: none; padding: 0; text-align: left; }
+        li { background: #fff; border-left: 5px solid var(--primary-pink); margin-bottom: 15px; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        li.completed { border-left-color: #2ecc71; background-color: #f9fff9; opacity: 0.8; }
+        .wish-text { font-weight: 600; font-size: 1.1rem; display: block; }
+        .date-info { font-size: 0.75rem; color: #2ecc71; font-weight: bold; }
+        .photo-preview { width: 100%; max-height: 250px; object-fit: cover; border-radius: 10px; margin-top: 10px; cursor: pointer; transition: transform 0.2s; }
+        .photo-preview:hover { transform: scale(1.02); }
+        .loading-text { font-size: 0.8rem; color: var(--primary-pink); display: none; margin-top: 5px; font-weight: bold; }
+
+        .memories-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding-top: 10px; }
+        .memory-card { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 3px 10px rgba(0,0,0,0.1); position: relative; cursor: pointer; transition: transform 0.2s; }
+        .memory-card:hover { transform: translateY(-3px); }
+        .memory-img { width: 100%; height: 150px; object-fit: cover; }
+        .memory-info { padding: 8px; font-size: 0.8rem; text-align: left; }
+        .memory-title { font-weight: 600; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .memory-date { color: #888; font-size: 0.7rem; }
+
+        .actions { display: flex; gap: 12px; margin-top: 15px; justify-content: flex-end; align-items: center; }
+        .btn-photo { cursor: pointer; border: 1px solid #f0f0f0; background: white; padding: 8px 18px; border-radius: 30px; font-size: 0.85rem; font-family: 'Poppins', sans-serif; font-weight: 600; color: #555; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: all 0.3s ease; display: flex; align-items: center; gap: 6px; }
+        .btn-photo:hover { background: var(--soft-pink); color: white; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(255, 133, 161, 0.4); border-color: var(--soft-pink); }
+        .btn-done, .btn-delete { cursor: pointer; border: none; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .btn-done { background: #e3f9e5; color: #2ecc71; }
+        .btn-done:hover { background: #2ecc71; color: white; transform: scale(1.15); box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4); }
+        .btn-delete { background: #ffe5e5; color: #ff4757; }
+        .btn-delete:hover { background: #ff4757; color: white; transform: scale(1.15) rotate(90deg); box-shadow: 0 4px 12px rgba(255, 71, 87, 0.4); }
+
+        /* --- FRIDGE NOTES STYLES --- */
+        .notes-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 10px 5px; }
+        .note-card {
+            background-color: #fff740;
+            padding: 15px;
+            min-height: 120px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            text-align: center;
+            font-family: 'Dancing Script', cursive;
+            font-size: 1.3rem;
+            color: #444;
+            box-shadow: 2px 4px 8px rgba(0,0,0,0.15);
+            position: relative;
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        .note-card:nth-child(3n+1) { background-color: #fff740; transform: rotate(-2deg); }
+        .note-card:nth-child(3n+2) { background-color: #ffccdd; transform: rotate(3deg); }
+        .note-card:nth-child(3n+3) { background-color: #d0f0fd; transform: rotate(-1deg); }
+        .note-card:hover { transform: scale(1.1) rotate(0deg) !important; z-index: 10; }
+        
+        .pin {
+            position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
+            width: 12px; height: 12px; border-radius: 50%;
+            background: rgba(220, 20, 60, 0.6);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .delete-note {
+            position: absolute; bottom: 5px; right: 5px;
+            font-size: 0.8rem; opacity: 0; cursor: pointer;
+            background: rgba(255,255,255,0.5); border-radius: 50%; width: 20px; height: 20px;
+            display: flex; justify-content: center; align-items: center;
+            font-family: sans-serif; transition: 0.2s;
+        }
+        .note-card:hover .delete-note { opacity: 1; }
+
+        /* --- LIGHTBOX --- */
+        .lightbox {
+            display: none; position: fixed; z-index: 9999;
+            left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            justify-content: center; align-items: center;
+            opacity: 0; transition: opacity 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        .lightbox.show { opacity: 1; }
+        .lightbox-content {
+            max-width: 90%; max-height: 85vh;
+            border-radius: 12px; box-shadow: 0 0 30px rgba(255,133,161,0.3);
+            transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 2px solid white;
+        }
+        .lightbox.show .lightbox-content { transform: scale(1); }
+        .close-lightbox {
+            position: absolute; top: 20px; right: 30px;
+            color: white; font-size: 40px; cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .close-lightbox:hover { transform: rotate(90deg); color: var(--primary-pink); }
+
+        /* --- CHAT STYLES --- */
+        .chat-window {
+            height: 55vh;
+            overflow-y: auto;
+            padding: 10px;
+            background: #fff5f7;
+            border-radius: 15px;
+            border: 1px solid #ffd1dc;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+            scroll-behavior: smooth;
+        }
+        .chat-bubble {
+            max-width: 75%;
+            padding: 10px 15px;
+            border-radius: 18px;
+            font-size: 0.9rem;
+            position: relative;
+            word-wrap: break-word;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .chat-bubble.sent {
+            align-self: flex-end;
+            background: var(--primary-pink);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        .chat-bubble.received {
+            align-self: flex-start;
+            background: white;
+            color: #444;
+            border: 1px solid #eee;
+            border-bottom-left-radius: 4px;
+        }
+        .chat-name {
+            font-size: 0.65rem;
+            margin-bottom: 2px;
+            opacity: 0.8;
+            display: block;
+            font-weight: 600;
+        }
+        .chat-time {
+            font-size: 0.6rem;
+            display: block;
+            text-align: right;
+            margin-top: 4px;
+            opacity: 0.7;
+        }
+        .chat-input-area {
+            display: flex;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="music-player" id="music-control">🎵</div>
+
+<audio id="bg-music" loop>
+    <source src="https://res.cloudinary.com/drduqvdxo/video/upload/v1766259778/16_Godspeed_zqxikd.mp3" type="audio/mpeg">
+</audio>
+
+<audio id="success-sound" src="https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3" preload="auto"></audio>
+
+<div id="lightbox" class="lightbox" onclick="window.closeLightbox()">
+    <span class="close-lightbox">&times;</span>
+    <img class="lightbox-content" id="lightbox-img">
+</div>
+
+<div class="container">
+    <div class="anniversary-box">
+        <span class="days-label">Sudah Bersama Selama</span>
+        <span id="days-counter" class="days-count">0 Hari</span>
+        <div class="divider"></div>
+        <span class="days-label">Menuju Anniversary Berikutnya</span>
+        <span id="next-anniv-counter" class="days-count" style="font-size: 1.4rem;">0 Hari Lagi</span>
+    </div>
+
+    <div id="tab-wishlist" class="tab-content active">
+        <h1>Our Wishlist ❤️</h1>
+        <p class="subtitle">Rencana seru kita ke depan..</p>
+        <div class="input-group">
+            <input type="text" id="wish-input" placeholder="Contoh: Dinner di tepi pantai...">
+            <button id="add-btn">Tambah Wishlist</button>
+        </div>
+        <ul id="wish-list"></ul>
+    </div>
+
+    <div id="tab-memories" class="tab-content">
+        <h1>Our Memories 📸</h1>
+        <p class="subtitle">Kenangan indah yang sudah kita lalui..</p>
+        <div id="memories-list" class="memories-grid"></div>
+    </div>
+
+    <div id="tab-activities" class="tab-content">
+        <h1>Our Activities 🚴</h1>
+        <p class="subtitle">Kegiatan yang sedang dilakukan..</p>
+        <div class="input-group">
+            <input type="text" id="activity-input" placeholder="Apa yang sedang dilakukan?">
+            <button id="add-activity-btn">Update Kegiatan</button>
+        </div>
+        <ul id="activity-list"></ul>
+    </div>
+
+    <div id="tab-notes" class="tab-content">
+        <h1>Fridge Notes 📌</h1>
+        <p class="subtitle">Tempel pesan manis di sini..</p>
+        <div class="input-group">
+            <input type="text" id="note-input" placeholder="Tulis pesan singkat...">
+            <button id="add-note-btn">Tempel Catatan</button>
+        </div>
+        <div id="notes-list" class="notes-container"></div>
+    </div>
+
+    <div id="tab-chat" class="tab-content">
+        <h1>Love Chat 💬</h1>
+        <p class="subtitle">Ngobrol rahasia berdua..</p>
+        <div id="chat-box" class="chat-window"></div>
+        <div class="chat-input-area">
+            <input type="text" id="chat-input" placeholder="Ketik pesan sayang..." style="flex:1;">
+            <button id="send-chat-btn">Kirim</button>
+        </div>
+    </div>
+</div>
+
+<div class="dock-wrapper">
+    <div class="dock-container" id="main-dock">
+        <div class="dock-item active" onclick="window.switchTab('wishlist', this)">
+            📝<div class="dock-label">Wishlist</div>
+        </div>
+        <div class="dock-item" onclick="window.switchTab('memories', this)">
+            📸<div class="dock-label">Memories</div>
+        </div>
+        <div class="dock-item" onclick="window.switchTab('activities', this)">
+            🚴<div class="dock-label">Activity</div>
+        </div>
+        <div class="dock-item" onclick="window.switchTab('notes', this)">
+            📌<div class="dock-label">Notes</div>
+        </div>
+        <div class="dock-item" onclick="window.switchTab('chat', this)">
+            💬<div class="dock-label">Chat</div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    // --- CONFIGURATION ---
     const firebaseConfig = {
         apiKey: "AIzaSyDCnCs-qlRPdk3YUX8qptsEssnzaPkvOlo",
         authDomain: "ourlovejourney-4096d.firebaseapp.com",
@@ -14,11 +321,8 @@
         measurementId: "G-J8JMJ3J9W4"
     };
 
-    // Inisialisasi App
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    
-    // Definisi Koleksi
     const wishlistCol = collection(db, "wishlist");
     const notesCol = collection(db, "notes");
     const activityCol = collection(db, "activities");
@@ -27,45 +331,38 @@
     const cloudName = "drduqvdxo";
     const uploadPreset = "l1tm7wdn";
 
-    // --- 3. FUNGSI GLOBAL (WAJIB DITEMPEL KE WINDOW AGAR HTML BISA BACA) ---
+    // --- GLOBAL FUNCTIONS (Ditempel ke Window agar bisa dipanggil HTML) ---
     
-    // Fungsi Switch Tab (Perbaikan Utama)
-    window.switchTab = function(tabName, el) {
-        // Sembunyikan semua tab
+    // 1. Switch Tab
+    window.switchTab = (tabName, el) => {
         document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        // Matikan semua tombol dock
         document.querySelectorAll('.dock-item').forEach(n => n.classList.remove('active'));
         
-        // Aktifkan tab yang dipilih
-        const targetTab = document.getElementById('tab-' + tabName);
-        if (targetTab) targetTab.classList.add('active');
-        
-        // Aktifkan tombol dock yang diklik
-        if (el) el.classList.add('active');
-        
-        // Khusus tab chat, cek nama
-        if (tabName === 'chat') {
-            checkChatIdentity();
-        }
+        const target = document.getElementById('tab-' + tabName);
+        if(target) target.classList.add('active');
+        if(el) el.classList.add('active');
+
+        if (tabName === 'chat') checkChatIdentity();
     };
 
-    // Fungsi Identitas Chat
-    window.checkChatIdentity = function() {
-        let savedName = localStorage.getItem("chat_username");
-        if (!savedName) {
+    // 2. Chat Identity Check
+    let myName = localStorage.getItem("chat_username");
+    
+    function checkChatIdentity() {
+        if (!myName) {
             setTimeout(() => {
                 let name = prompt("Masukkan nama panggilan kamu:", "Sayang");
                 if (name) {
+                    myName = name;
                     localStorage.setItem("chat_username", name);
                     alert("Halo " + name + "! Chat siap.");
-                    location.reload(); // Refresh agar variabel myName terupdate
                 }
-            }, 500);
+            }, 300);
         }
-    };
+    }
 
-    // Fungsi Lightbox
-    window.openLightbox = function(url) {
+    // 3. Lightbox Logic
+    window.openLightbox = (url) => {
         const lb = document.getElementById('lightbox');
         const img = document.getElementById('lightbox-img');
         if(lb && img) {
@@ -74,8 +371,7 @@
             setTimeout(() => lb.classList.add('show'), 10);
         }
     };
-    
-    window.closeLightbox = function() {
+    window.closeLightbox = () => {
         const lb = document.getElementById('lightbox');
         if(lb) {
             lb.classList.remove('show');
@@ -83,8 +379,8 @@
         }
     };
 
-    // Fungsi Upload
-    window.uploadPhoto = async function(file, id, colName) {
+    // 4. Upload Function
+    window.uploadPhoto = async (file, id, colName) => {
         if (!file) return;
         const loader = document.getElementById(`loader-${id}`);
         if(loader) loader.style.display = 'block';
@@ -104,35 +400,36 @@
         }
     };
 
-    // Fungsi Mark Done & Delete
-    window.markDone = async function(id, status) {
+    // 5. Actions (Done / Delete)
+    window.markDone = async (id, status) => {
         if (!status) {
             const sound = document.getElementById('success-sound');
             if(sound) { sound.currentTime = 0; sound.play().catch(e=>{}); }
-            if(window.confetti) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#ff85a1', '#fbb1bd', '#ff477e'] });
+            try {
+                if(window.confetti) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#ff85a1', '#fbb1bd', '#ff477e'] });
+            } catch(e) {}
         }
         const t = new Date();
         const dateStr = `${t.getDate()}/${t.getMonth()+1}/${t.getFullYear()}`;
         await updateDoc(doc(db, "wishlist", id), { completed: !status, date: !status ? dateStr : null });
     };
 
-    window.deleteItem = async function(id, colName = "wishlist") { 
+    window.deleteItem = async (id, colName) => { 
         if(confirm("Hapus item ini?")) await deleteDoc(doc(db, colName, id)); 
     };
-    
-    window.deleteNote = async function(id) {
+
+    window.deleteNote = async (id) => {
         if(confirm("Lepas catatan ini?")) await deleteDoc(doc(db, "notes", id));
     };
 
+    // --- APPLICATION LOGIC ---
 
-    // --- 4. LOGIKA APLIKASI UTAMA ---
-
-    // Music Player
+    // Music
     const musicBtn = document.getElementById('music-control');
     const audio = document.getElementById('bg-music');
     let isPlaying = false;
-
-    if(musicBtn && audio) {
+    
+    if(musicBtn) {
         musicBtn.onclick = () => {
             if (isPlaying) { 
                 audio.pause(); 
@@ -140,13 +437,13 @@
             } else { 
                 audio.play().then(() => { 
                     musicBtn.classList.add('playing'); 
-                }).catch(e => console.log("Perlu interaksi user dulu"));
+                }).catch(() => alert("Klik layar dulu baru play musik!"));
             }
             isPlaying = !isPlaying;
         };
     }
 
-    // Dock Animation
+    // Dock Effect
     const dock = document.getElementById('main-dock');
     const items = document.querySelectorAll('.dock-item');
     if(dock) {
@@ -157,75 +454,58 @@
                 const dist = Math.abs(e.clientX - centerX);
                 const scale = Math.max(50, 75 - (dist * 0.3)); 
                 if(dist < 100) { 
-                    item.style.width = `${scale}px`; 
-                    item.style.height = `${scale}px`; 
-                    item.style.fontSize = `${1.5 * (scale/50)}rem`; 
+                    item.style.width = `${scale}px`; item.style.height = `${scale}px`; item.style.fontSize = `${1.5 * (scale/50)}rem`; 
                 } else { 
-                    item.style.width = '50px'; 
-                    item.style.height = '50px'; 
-                    item.style.fontSize = '1.5rem'; 
+                    item.style.width = '50px'; item.style.height = '50px'; item.style.fontSize = '1.5rem'; 
                 }
             });
         });
         dock.addEventListener('mouseleave', () => {
-            items.forEach(item => { 
-                item.style.width = '50px'; 
-                item.style.height = '50px'; 
-                item.style.fontSize = '1.5rem'; 
-            });
+            items.forEach(item => { item.style.width = '50px'; item.style.height = '50px'; item.style.fontSize = '1.5rem'; });
         });
     }
 
-    // Hitung Hari
+    // Days Counter
     const startDate = new Date(2025, 2, 9); // 9 Maret 2025
     const now = new Date();
     const diffInDays = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
-    const elDays = document.getElementById('days-counter');
-    if(elDays) elDays.innerText = diffInDays + " Hari";
+    document.getElementById('days-counter').innerText = diffInDays + " Hari";
     
     let nextAnniv = new Date(now.getFullYear(), startDate.getMonth(), startDate.getDate());
     if (now > nextAnniv) nextAnniv.setFullYear(now.getFullYear() + 1);
-    const elNext = document.getElementById('next-anniv-counter');
-    if(elNext) elNext.innerText = Math.ceil((nextAnniv - now) / (1000 * 60 * 60 * 24)) + " Hari Lagi";
+    document.getElementById('next-anniv-counter').innerText = Math.ceil((nextAnniv - now) / (1000 * 60 * 60 * 24)) + " Hari Lagi";
 
+    // --- DATABASE LISTENERS ---
 
-    // --- 5. LOGIKA DATABASE (SNAPSHOTS) ---
-
-    // WISHLIST
+    // Wishlist & Memories
     const wishListUI = document.getElementById('wish-list');
     const memoriesUI = document.getElementById('memories-list');
-    
     onSnapshot(query(wishlistCol, orderBy("createdAt", "desc")), (snapshot) => {
-        if(wishListUI) wishListUI.innerHTML = ''; 
-        if(memoriesUI) memoriesUI.innerHTML = '';
-        
+        wishListUI.innerHTML = ''; memoriesUI.innerHTML = '';
         snapshot.forEach((doc) => {
             const data = { id: doc.id, ...doc.data() };
-            // Render Wishlist Item
-            if(wishListUI) {
-                const li = document.createElement('li');
-                if (data.completed) li.classList.add('completed');
-                const tgl = data.date ? `✅ Selesai: ${data.date}` : '';
-                
-                li.innerHTML = `
-                    <div class="wish-content">
-                        <span class="wish-text">${data.text}</span>
-                        <span class="date-info">${tgl}</span>
-                        ${data.photo ? `<img src="${data.photo}" class="photo-preview" onclick="openLightbox('${data.photo}')">` : ''}
-                        <div id="loader-${data.id}" class="loading-text">Loading...</div>
-                    </div>
-                    <div class="actions">
-                        <input type="file" id="file-${data.id}" style="display:none" accept="image/*" onchange="window.uploadPhoto(this.files[0], '${data.id}', 'wishlist')">
-                        <button class="btn-photo" onclick="document.getElementById('file-${data.id}').click()">📷</button>
-                        <button class="btn-done" onclick="window.markDone('${data.id}', ${data.completed})">✔</button>
-                        <button class="btn-delete" onclick="window.deleteItem('${data.id}', 'wishlist')">✖</button>
-                    </div>
-                `;
-                wishListUI.appendChild(li);
-            }
             
+            // Render Wish
+            const li = document.createElement('li');
+            if (data.completed) li.classList.add('completed');
+            li.innerHTML = `
+                <div class="wish-content">
+                    <span class="wish-text">${data.text}</span>
+                    <span class="date-info">${data.date ? '✅ ' + data.date : ''}</span>
+                    ${data.photo ? `<img src="${data.photo}" class="photo-preview" onclick="openLightbox('${data.photo}')">` : ''}
+                    <div id="loader-${data.id}" class="loading-text">Loading...</div>
+                </div>
+                <div class="actions">
+                    <input type="file" id="file-${data.id}" style="display:none" accept="image/*" onchange="window.uploadPhoto(this.files[0], '${data.id}', 'wishlist')">
+                    <button class="btn-photo" onclick="document.getElementById('file-${data.id}').click()">📷</button>
+                    <button class="btn-done" onclick="window.markDone('${data.id}', ${data.completed})">✔</button>
+                    <button class="btn-delete" onclick="window.deleteItem('${data.id}', 'wishlist')">✖</button>
+                </div>
+            `;
+            wishListUI.appendChild(li);
+
             // Render Memory
-            if(data.completed && data.photo && memoriesUI) {
+            if(data.completed && data.photo) {
                 const div = document.createElement('div');
                 div.className = 'memory-card';
                 div.innerHTML = `<img src="${data.photo}" class="memory-img" onclick="openLightbox('${data.photo}')"><div class="memory-info"><span class="memory-title">${data.text}</span><span class="memory-date">${data.date || ''}</span></div>`;
@@ -234,10 +514,10 @@
         });
     });
 
-    // ACTIVITIES
+    // Activities
     const activityUI = document.getElementById('activity-list');
     onSnapshot(query(activityCol, orderBy("createdAt", "desc")), (snapshot) => {
-        if(activityUI) activityUI.innerHTML = '';
+        activityUI.innerHTML = '';
         snapshot.forEach((doc) => {
             const data = { id: doc.id, ...doc.data() };
             const li = document.createElement('li');
@@ -257,10 +537,10 @@
         });
     });
 
-    // NOTES
+    // Notes
     const notesUI = document.getElementById('notes-list');
     onSnapshot(query(notesCol, orderBy("createdAt", "desc")), (snapshot) => {
-        if(notesUI) notesUI.innerHTML = '';
+        notesUI.innerHTML = '';
         snapshot.forEach((doc) => {
             const data = { id: doc.id, ...doc.data() };
             const div = document.createElement('div');
@@ -270,38 +550,23 @@
         });
     });
 
-    // CHAT (REALTIME)
+    // Chat
     const chatBox = document.getElementById('chat-box');
-    const myName = localStorage.getItem("chat_username"); // Ambil nama dari penyimpanan
+    onSnapshot(query(chatCol, orderBy("createdAt", "asc")), (snapshot) => {
+        chatBox.innerHTML = '';
+        snapshot.forEach((doc) => {
+            const msg = doc.data();
+            const div = document.createElement('div');
+            const isMe = msg.sender === myName;
+            div.className = `chat-bubble ${isMe ? 'sent' : 'received'}`;
+            const time = new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            div.innerHTML = `<span class="chat-name">${msg.sender}</span>${msg.text}<span class="chat-time">${time}</span>`;
+            chatBox.appendChild(div);
+        });
+        chatBox.scrollTop = chatBox.scrollHeight;
+    });
 
-    // Gunakan try-catch agar jika chat error, web tetap jalan
-    try {
-        if(chatBox) {
-            // Gunakan 'limit(50)' jika database sudah di-index, jika belum, hapus limitnya
-            const q = query(chatCol, orderBy("createdAt", "asc")); 
-            
-            onSnapshot(q, (snapshot) => {
-                chatBox.innerHTML = '';
-                snapshot.forEach((doc) => {
-                    const msg = doc.data();
-                    const div = document.createElement('div');
-                    const isMe = msg.sender === myName;
-                    div.className = `chat-bubble ${isMe ? 'sent' : 'received'}`;
-                    const time = new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                    div.innerHTML = `<span class="chat-name">${msg.sender}</span>${msg.text}<span class="chat-time">${time}</span>`;
-                    chatBox.appendChild(div);
-                });
-                chatBox.scrollTop = chatBox.scrollHeight;
-            });
-        }
-    } catch (e) {
-        console.log("Chat error (mungkin permission):", e);
-    }
-
-
-    // --- 6. EVENT LISTENER TOMBOL TAMBAH ---
-    
-    // Tambah Wishlist
+    // --- BUTTON HANDLERS ---
     document.getElementById('add-btn').onclick = async () => {
         const input = document.getElementById('wish-input');
         if (input.value === '') return;
@@ -309,7 +574,6 @@
         input.value = '';
     };
 
-    // Tambah Activity
     document.getElementById('add-activity-btn').onclick = async () => {
         const input = document.getElementById('activity-input');
         if (input.value === '') return;
@@ -317,7 +581,6 @@
         input.value = '';
     };
 
-    // Tambah Note
     document.getElementById('add-note-btn').onclick = async () => {
         const input = document.getElementById('note-input');
         if (input.value === '') return;
@@ -325,26 +588,19 @@
         input.value = '';
     };
 
-    // Kirim Chat
     const chatInput = document.getElementById('chat-input');
     const sendChatBtn = document.getElementById('send-chat-btn');
     
-    if(sendChatBtn) {
-        sendChatBtn.onclick = async () => {
-            if (chatInput.value.trim() === '') return;
-            if (!myName) { window.checkChatIdentity(); return; } // Cek nama
-            
-            await addDoc(chatCol, { 
-                text: chatInput.value, 
-                sender: myName, 
-                createdAt: Date.now() 
-            });
-            chatInput.value = '';
-        };
+    const sendChat = async () => {
+        if (chatInput.value.trim() === '') return;
+        if (!myName) { checkChatIdentity(); return; }
+        await addDoc(chatCol, { text: chatInput.value, sender: myName, createdAt: Date.now() });
+        chatInput.value = '';
+    };
 
-        chatInput.addEventListener("keypress", (e) => {
-            if (e.key === "Enter") sendChatBtn.click();
-        });
-    }
+    sendChatBtn.onclick = sendChat;
+    chatInput.addEventListener("keypress", (e) => { if (e.key === "Enter") sendChat(); });
 
 </script>
+</body>
+</html>
