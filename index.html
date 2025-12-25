@@ -11,7 +11,7 @@
         :root { --primary-pink: #ff85a1; --soft-pink: #fbb1bd; --dark-pink: #ff477e; --bg-color: #fff0f3; }
         body { font-family: 'Poppins', sans-serif; background-color: var(--bg-color); margin: 0; padding: 20px 0 100px 0; color: #444; display: flex; justify-content: center; overflow-x: hidden; }
         
-        /* --- LOGIN SCREEN STYLES (BARU) --- */
+        /* --- LOGIN SCREEN STYLES (UPDATED) --- */
         #login-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--bg-color); z-index: 99999;
@@ -24,8 +24,8 @@
             text-align: center;
         }
         .login-box h1 { font-family: 'Dancing Script', cursive; color: var(--dark-pink); margin-bottom: 10px; }
-        .login-box input { width: 100%; box-sizing: border-box; margin-bottom: 15px; }
-        .app-content { display: none; opacity: 0; transition: opacity 1s; width: 100%; display: flex; justify-content: center; } /* Membungkus konten utama */
+        .login-box input { width: 100%; box-sizing: border-box; margin-bottom: 15px; text-align: center; font-size: 1.1rem; }
+        .app-content { display: none; opacity: 0; transition: opacity 1s; width: 100%; display: flex; justify-content: center; } 
 
         /* --- END LOGIN STYLES --- */
 
@@ -45,7 +45,7 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* --- APPLE DOCK STYLES --- */
-        .dock-wrapper { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; display: none; } /* Hidden by default for login */
+        .dock-wrapper { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; display: none; } 
         .dock-container { 
             display: flex; align-items: flex-end; gap: 10px; padding: 12px 20px; 
             background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(15px); 
@@ -80,7 +80,7 @@
             border: 2px solid var(--primary-pink);
             font-size: 1.2rem;
             transition: all 0.3s ease;
-            display: none; /* Hidden by default for login */
+            display: none;
         }
         .music-player.playing {
             background: var(--primary-pink); color: white;
@@ -91,7 +91,7 @@
 
         /* Standard Elements */
         .input-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-        input[type="text"], input[type="password"], input[type="email"] { padding: 12px; border: 2px solid var(--soft-pink); border-radius: 10px; outline: none; }
+        input[type="text"], input[type="password"] { padding: 12px; border: 2px solid var(--soft-pink); border-radius: 10px; outline: none; }
         button { background: var(--primary-pink); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 600; }
         ul { list-style: none; padding: 0; text-align: left; }
         li { background: #fff; border-left: 5px solid var(--primary-pink); margin-bottom: 15px; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
@@ -242,10 +242,9 @@
         <h1>Love Journey 🔒</h1>
         <p class="subtitle">Masuk dulu ya sayang ❤️</p>
         <div class="input-group">
-            <input type="email" id="email-login" placeholder="Email kita">
-            <input type="password" id="password-login" placeholder="Password rahasia">
+            <input type="text" id="keyword-login" placeholder="Ketik nama panggilan kita...">
             <button id="btn-login-submit">Buka Hati</button>
-            <p id="login-error" style="color: red; font-size: 0.8rem; display: none; margin-top:10px;">Email atau Password salah!</p>
+            <p id="login-error" style="color: red; font-size: 0.8rem; display: none; margin-top:10px;">Ups! Kata kuncinya salah.</p>
         </div>
     </div>
 </div>
@@ -263,7 +262,8 @@
     <img class="lightbox-content" id="lightbox-img">
 </div>
 
-<div class="app-content" id="main-app"> <div class="container">
+<div class="app-content" id="main-app">
+    <div class="container">
         <div class="anniversary-box">
             <span class="days-label">Sudah Bersama Selama</span>
             <span id="days-counter" class="days-count">0 Hari</span>
@@ -342,7 +342,6 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"; // Import Auth Baru
     import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     // --- CONFIGURATION ---
@@ -357,7 +356,6 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app); // Inisialisasi Auth
     const db = getFirestore(app);
     const wishlistCol = collection(db, "wishlist");
     const notesCol = collection(db, "notes");
@@ -367,51 +365,66 @@
     const cloudName = "drduqvdxo";
     const uploadPreset = "l1tm7wdn";
 
-    // --- LOGIC LOGIN (BARU) ---
+    // --- LOGIC LOGIN KEYWORD (BARU) ---
+    
+    // --- ATUR KATA KUNCI RAHASIA DISINI ---
+    // Masukkan kata-kata yang bisa dipakai untuk login (huruf kecil semua)
+    const PASSWORD_ALLOWED = ["sayang", "nduty", "092625", "baby"]; 
+
     const loginOverlay = document.getElementById('login-overlay');
     const mainApp = document.getElementById('main-app');
     const dockBar = document.getElementById('dock-bar');
     const musicBtnDisplay = document.getElementById('music-control');
     const loginBtn = document.getElementById('btn-login-submit');
-    const emailInput = document.getElementById('email-login');
-    const passInput = document.getElementById('password-login');
+    const keywordInput = document.getElementById('keyword-login');
     const loginError = document.getElementById('login-error');
 
-    // Cek status login
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            // Jika sudah login
-            loginOverlay.style.display = 'none';
-            mainApp.style.display = 'flex';
-            setTimeout(() => { mainApp.style.opacity = '1'; }, 100);
-            dockBar.style.display = 'block';
-            musicBtnDisplay.style.display = 'flex';
+    // Fungsi untuk menampilkan aplikasi
+    function showApp() {
+        loginOverlay.style.display = 'none';
+        mainApp.style.display = 'flex';
+        setTimeout(() => { mainApp.style.opacity = '1'; }, 100);
+        dockBar.style.display = 'block';
+        musicBtnDisplay.style.display = 'flex';
+    }
+
+    // Cek apakah user sudah pernah login sebelumnya
+    if (localStorage.getItem('love_login_success') === 'true') {
+        showApp();
+    } else {
+        // Jika belum, sembunyikan aplikasi
+        mainApp.style.display = 'none';
+        dockBar.style.display = 'none';
+        musicBtnDisplay.style.display = 'none';
+        loginOverlay.style.display = 'flex';
+    }
+
+    // Aksi Tombol Login
+    loginBtn.addEventListener('click', () => {
+        const inputVal = keywordInput.value.toLowerCase().trim(); // Jadikan huruf kecil agar tidak sensitif
+        
+        if (PASSWORD_ALLOWED.includes(inputVal)) {
+            // Jika kata kunci benar
+            localStorage.setItem('love_login_success', 'true'); // Simpan status login
+            loginError.style.display = 'none';
+            
+            // Simpan nama panggilan untuk chat otomatis
+            if (!localStorage.getItem("chat_username")) {
+                localStorage.setItem("chat_username", keywordInput.value); // Simpan nama asli yg diketik (kapitalnya)
+                myName = keywordInput.value;
+            }
+            
+            showApp();
         } else {
-            // Jika belum login
-            loginOverlay.style.display = 'flex';
-            mainApp.style.display = 'none';
-            dockBar.style.display = 'none';
-            musicBtnDisplay.style.display = 'none';
+            // Jika salah
+            loginError.style.display = 'block';
+            keywordInput.value = '';
         }
     });
+    
+    // Bisa tekan Enter juga
+    keywordInput.addEventListener("keypress", (e) => { if (e.key === "Enter") loginBtn.click(); });
 
-    // Tombol Login Action
-    loginBtn.addEventListener('click', () => {
-        const email = emailInput.value;
-        const password = passInput.value;
-        loginError.style.display = 'none';
-        loginBtn.innerText = 'Mengecek...';
-
-        signInWithEmailAndPassword(auth, email, password)
-            .then((userCredential) => {
-                // Berhasil login, onAuthStateChanged akan jalan otomatis
-            })
-            .catch((error) => {
-                console.error(error);
-                loginBtn.innerText = 'Buka Hati';
-                loginError.style.display = 'block';
-            });
-    });
 
     // --- GLOBAL FUNCTIONS (Ditempel ke Window agar bisa dipanggil HTML) ---
     
