@@ -322,7 +322,7 @@
         .current-mood:last-child { border: none; padding: 0; }
         .mood-emoji { font-size: 1.2rem; }
 
-        /* --- MINI GAMES STYLES (NEW) --- */
+        /* --- MINI GAMES STYLES --- */
         .tic-tac-toe {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -543,7 +543,7 @@
     const activityCol = collection(db, "activities");
     const chatCol = collection(db, "chat");
     const moodCol = collection(db, "moods");
-    const gamesCol = collection(db, "games"); // KOLEKSI GAMES
+    const gamesCol = collection(db, "games");
 
     const cloudName = "drduqvdxo";
     const uploadPreset = "l1tm7wdn";
@@ -651,7 +651,6 @@
     };
 
     // --- FUNGSI MINI GAMES (TIC TAC TOE) ---
-    // Simpel Realtime Game: Semua orang yang buka web melihat board yang sama
     const gameDocId = "tictactoe";
     
     window.makeMove = async (index) => {
@@ -667,18 +666,13 @@
             turn = data.turn;
         }
 
-        // Cek jika kotak sudah terisi atau game selesai
         if (board[index] !== "") return;
 
-        // Update Board
         board[index] = turn;
-        
-        // Ganti Giliran
         const nextTurn = turn === "X" ? "O" : "X";
 
         await setDoc(gameRef, { board: board, turn: nextTurn }, { merge: true });
         
-        // Cek Pemenang Lokal (Untuk efek visual cepat)
         checkWin(board);
     };
 
@@ -693,15 +687,21 @@
 
     function checkWin(board) {
         const winPatterns = [
-            [0,1,2], [3,4,5], [6,7,8], // Horizontal
-            [0,3,6], [1,4,7], [2,5,8], // Vertical
-            [0,4,8], [2,4,6]           // Diagonal
+            [0,1,2], [3,4,5], [6,7,8], 
+            [0,3,6], [1,4,7], [2,5,8], 
+            [0,4,8], [2,4,6]
         ];
         
         for (let p of winPatterns) {
             const [a, b, c] = p;
             if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                // VISUAL CONFETTI
                 if(window.confetti) confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+                
+                // AUDIO TING! (BARU DITAMBAHKAN)
+                const sound = document.getElementById('success-sound');
+                if(sound) { sound.currentTime = 0; sound.play().catch(e=>{}); }
+
                 setTimeout(() => alert("Pemenangnya: " + board[a]), 100);
                 return true;
             }
@@ -764,7 +764,7 @@
 
     // --- DATABASE LISTENERS ---
     
-    // LISTENER GAMES (REALTIME UPDATE)
+    // LISTENER GAMES
     const gameStatus = document.getElementById('game-status');
     const cells = document.querySelectorAll('.cell');
     
@@ -774,7 +774,6 @@
             const board = data.board;
             const turn = data.turn;
 
-            // Render Board
             cells.forEach((cell, index) => {
                 cell.innerText = board[index];
                 if (board[index] !== "") cell.classList.add('taken');
