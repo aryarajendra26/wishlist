@@ -267,7 +267,7 @@
             border: 1px dashed #aaa;
         }
 
-        /* --- MOOD METER STYLES (NEW) --- */
+        /* --- MOOD METER STYLES --- */
         .mood-box {
             background: #fff;
             padding: 15px;
@@ -321,6 +321,40 @@
         }
         .current-mood:last-child { border: none; padding: 0; }
         .mood-emoji { font-size: 1.2rem; }
+
+        /* --- MINI GAMES STYLES (NEW) --- */
+        .tic-tac-toe {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+        .cell {
+            background: #fff;
+            height: 90px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--dark-pink);
+            cursor: pointer;
+            border: 2px solid #eee;
+        }
+        .cell:hover { background: #fff0f3; }
+        .cell.taken { pointer-events: none; }
+        .turn-indicator {
+            margin-bottom: 15px;
+            font-weight: bold;
+            color: #555;
+            background: #eee;
+            padding: 8px;
+            border-radius: 20px;
+            display: inline-block;
+        }
     </style>
 </head>
 <body>
@@ -438,6 +472,27 @@
         </div>
     </div>
 
+    <div id="tab-games" class="tab-content">
+        <h1>Mini Games 🎮</h1>
+        <p class="subtitle">Main bareng kalau bosan..</p>
+        
+        <div class="game-container">
+            <div class="turn-indicator" id="game-status">Giliran: ...</div>
+            <div class="tic-tac-toe" id="ttt-board">
+                <div class="cell" onclick="window.makeMove(0)"></div>
+                <div class="cell" onclick="window.makeMove(1)"></div>
+                <div class="cell" onclick="window.makeMove(2)"></div>
+                <div class="cell" onclick="window.makeMove(3)"></div>
+                <div class="cell" onclick="window.makeMove(4)"></div>
+                <div class="cell" onclick="window.makeMove(5)"></div>
+                <div class="cell" onclick="window.makeMove(6)"></div>
+                <div class="cell" onclick="window.makeMove(7)"></div>
+                <div class="cell" onclick="window.makeMove(8)"></div>
+            </div>
+            <button onclick="window.resetGame()" style="margin-top:20px; background:#f39c12;">🔄 Ulang Game</button>
+        </div>
+    </div>
+
 </div>
 
 <div class="dock-wrapper">
@@ -460,12 +515,15 @@
         <div class="dock-item" onclick="window.switchTab('video', this)">
             📹<div class="dock-label">V-Call</div>
         </div>
+        <div class="dock-item" onclick="window.switchTab('games', this)">
+            🎮<div class="dock-label">Games</div>
+        </div>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     // --- CONFIGURATION ---
     const firebaseConfig = {
@@ -484,7 +542,8 @@
     const notesCol = collection(db, "notes");
     const activityCol = collection(db, "activities");
     const chatCol = collection(db, "chat");
-    const moodCol = collection(db, "moods"); // KOLEKSI BARU UNTUK MOOD
+    const moodCol = collection(db, "moods");
+    const gamesCol = collection(db, "games"); // KOLEKSI GAMES
 
     const cloudName = "drduqvdxo";
     const uploadPreset = "l1tm7wdn";
@@ -581,17 +640,78 @@
         if(confirm("Lepas catatan ini?")) await deleteDoc(doc(db, "notes", id));
     };
 
-    // --- FUNGSI MOOD METER (BARU) ---
+    // --- FUNGSI MOOD METER ---
     window.setMood = async (emoji) => {
         if(!myName) { checkChatIdentity(); return; }
-        // Simpan mood berdasarkan nama user
-        // Menggunakan nama sebagai ID dokumen agar 1 user hanya punya 1 status terkini
         await setDoc(doc(db, "moods", myName), {
             user: myName,
             mood: emoji,
             timestamp: Date.now()
         });
     };
+
+    // --- FUNGSI MINI GAMES (TIC TAC TOE) ---
+    // Simpel Realtime Game: Semua orang yang buka web melihat board yang sama
+    const gameDocId = "tictactoe";
+    
+    window.makeMove = async (index) => {
+        const gameRef = doc(db, "games", gameDocId);
+        const gameSnap = await getDoc(gameRef);
+        
+        let board = Array(9).fill("");
+        let turn = "X";
+
+        if (gameSnap.exists()) {
+            const data = gameSnap.data();
+            board = data.board;
+            turn = data.turn;
+        }
+
+        // Cek jika kotak sudah terisi atau game selesai
+        if (board[index] !== "") return;
+
+        // Update Board
+        board[index] = turn;
+        
+        // Ganti Giliran
+        const nextTurn = turn === "X" ? "O" : "X";
+
+        await setDoc(gameRef, { board: board, turn: nextTurn }, { merge: true });
+        
+        // Cek Pemenang Lokal (Untuk efek visual cepat)
+        checkWin(board);
+    };
+
+    window.resetGame = async () => {
+        if(confirm("Ulangi permainan?")) {
+            await setDoc(doc(db, "games", gameDocId), { 
+                board: Array(9).fill(""), 
+                turn: "X" 
+            });
+        }
+    };
+
+    function checkWin(board) {
+        const winPatterns = [
+            [0,1,2], [3,4,5], [6,7,8], // Horizontal
+            [0,3,6], [1,4,7], [2,5,8], // Vertical
+            [0,4,8], [2,4,6]           // Diagonal
+        ];
+        
+        for (let p of winPatterns) {
+            const [a, b, c] = p;
+            if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                if(window.confetti) confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+                setTimeout(() => alert("Pemenangnya: " + board[a]), 100);
+                return true;
+            }
+        }
+        if (!board.includes("")) {
+            setTimeout(() => alert("Seri! Main lagi yuk."), 100);
+            return true;
+        }
+        return false;
+    }
 
     // --- APPLICATION LOGIC ---
     const musicBtn = document.getElementById('music-control');
@@ -644,6 +764,27 @@
 
     // --- DATABASE LISTENERS ---
     
+    // LISTENER GAMES (REALTIME UPDATE)
+    const gameStatus = document.getElementById('game-status');
+    const cells = document.querySelectorAll('.cell');
+    
+    onSnapshot(doc(db, "games", gameDocId), (doc) => {
+        if (doc.exists()) {
+            const data = doc.data();
+            const board = data.board;
+            const turn = data.turn;
+
+            // Render Board
+            cells.forEach((cell, index) => {
+                cell.innerText = board[index];
+                if (board[index] !== "") cell.classList.add('taken');
+                else cell.classList.remove('taken');
+            });
+
+            gameStatus.innerText = "Giliran: " + turn;
+        }
+    });
+
     // LISTENER MOOD METER
     const moodDisplay = document.getElementById('mood-display');
     onSnapshot(query(moodCol, orderBy("timestamp", "desc")), (snapshot) => {
@@ -652,7 +793,6 @@
             return;
         }
         moodDisplay.innerHTML = '';
-        // Tampilkan semua mood (biasanya cuma 2 orang)
         snapshot.forEach((doc) => {
             const data = doc.data();
             const time = new Date(data.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
