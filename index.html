@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
     
-    <script src='https://meet.jit.si/external_api.js'></script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     
     <style>
         :root { --primary-pink: #ff85a1; --soft-pink: #fbb1bd; --dark-pink: #ff477e; --bg-color: #fff0f3; }
@@ -215,6 +215,50 @@
             display: flex;
             gap: 10px;
         }
+
+        /* --- VIDEO CALL STYLES (NEW) --- */
+        .video-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        .vid-wrapper {
+            width: 100%;
+            height: 250px;
+            background: #000;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1); /* Efek Cermin */
+        }
+        #local-video {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 90px;
+            height: 120px;
+            border-radius: 10px;
+            border: 2px solid white;
+            z-index: 10;
+        }
+        #my-id-display {
+            font-size: 0.8rem;
+            background: #eee;
+            padding: 8px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            user-select: all; /* Biar gampang dicopy */
+            border: 1px dashed #aaa;
+        }
     </style>
 </head>
 <body>
@@ -292,11 +336,28 @@
 
     <div id="tab-video" class="tab-content">
         <h1>Video Call 📹</h1>
-        <p class="subtitle">Tatap muka walau jauh..</p>
-        <div id="meet-container" style="height: 400px; background: #000; border-radius: 15px; overflow: hidden; margin-bottom: 15px;">
-            <div style="color: white; padding-top: 180px; display:flex; justify-content:center; align-items:center;">Klik tombol untuk mulai</div>
+        <p class="subtitle">Panggil dia sekarang..</p>
+        
+        <div class="video-container">
+            <div class="vid-wrapper">
+                <video id="remote-video" autoplay playsinline></video>
+                <video id="local-video" autoplay muted playsinline></video>
+                <div id="status-text" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:white; font-size:0.8rem; text-align:center;">
+                    Klik tombol kamera<br>untuk mulai
+                </div>
+            </div>
         </div>
-        <button id="start-call-btn" style="width: 100%; background: #2ecc71;">📞 Mulai Panggilan</button>
+
+        <div id="my-id-display">ID Kamu: <span id="my-peer-id">...</span></div>
+        <p style="font-size: 0.7rem; color: #888; margin-top: -5px;">*Copy ID ini & kirim ke dia lewat Chat</p>
+
+        <div class="input-group">
+            <input type="text" id="target-peer-id" placeholder="Tempel ID Pasangan disini...">
+            <div style="display:flex; gap:10px;">
+                <button id="open-camera-btn" style="flex:1; background:#3498db;">📸 Buka Kamera</button>
+                <button id="call-peer-btn" style="flex:1; background:#2ecc71;" disabled>📞 Panggil</button>
+            </div>
+        </div>
     </div>
 
 </div>
@@ -349,7 +410,7 @@
     const cloudName = "drduqvdxo";
     const uploadPreset = "l1tm7wdn";
 
-    // --- GLOBAL FUNCTIONS (Ditempel ke Window agar bisa dipanggil HTML) ---
+    // --- GLOBAL FUNCTIONS ---
     
     // 1. Switch Tab
     window.switchTab = (tabName, el) => {
@@ -619,7 +680,6 @@
     sendChatBtn.onclick = sendChat;
     chatInput.addEventListener("keypress", (e) => { if (e.key === "Enter") sendChat(); });
 
-    // --- FUNGSI GANTI NAMA (Fitur Baru) ---
     document.getElementById('change-name-btn').onclick = () => {
         let newName = prompt("Mau ganti nama jadi apa?", myName || "");
         if (newName) {
@@ -629,51 +689,61 @@
         }
     };
 
-    // --- LOGIC VIDEO CALL ---
-    let jitsiApi = null;
-    const videoBtn = document.getElementById('start-call-btn');
-    if(videoBtn) {
-        videoBtn.onclick = () => {
-            const domain = "meet.jit.si";
-            const container = document.getElementById('meet-container');
+    // --- LOGIC VIDEO CALL (PEERJS) ---
+    // Simple PeerJS Implementation for 1-on-1 Call
+    let peer = null;
+    let localStream = null;
 
-            if (jitsiApi) {
-                jitsiApi.dispose();
-                jitsiApi = null;
-                container.innerHTML = '<div style="color: white; padding-top: 180px; display:flex; justify-content:center;">Panggilan Diakhiri</div>';
-                videoBtn.innerText = "📞 Mulai Panggilan";
-                videoBtn.style.background = "#2ecc71";
-                return;
-            }
+    const openCamBtn = document.getElementById('open-camera-btn');
+    const callBtn = document.getElementById('call-peer-btn');
+    const myIdDisplay = document.getElementById('my-peer-id');
+    const statusText = document.getElementById('status-text');
 
-            container.innerHTML = "";
-            const roomName = "OurLoveJourney_Room_" + "SecureVideo"; 
+    if(openCamBtn) {
+        openCamBtn.onclick = () => {
+            // 1. Inisialisasi Peer (Dapat ID)
+            peer = new Peer(); 
 
-            const options = {
-                roomName: roomName,
-                width: "100%",
-                height: "100%",
-                parentNode: container,
-                userInfo: { displayName: myName || "Sayang" },
-                configOverwrite: { startWithAudioMuted: false, startWithVideoMuted: false },
-                interfaceConfigOverwrite: { TOOLBAR_BUTTONS: ['microphone', 'camera', 'tileview', 'hangup'] }
-            };
+            peer.on('open', (id) => {
+                myIdDisplay.innerText = id;
+                statusText.innerText = "Kamera Aktif. Menunggu Panggilan...";
+                openCamBtn.style.display = 'none'; // Sembunyikan tombol
+                callBtn.disabled = false; // Aktifkan tombol panggil
+            });
 
-            if(typeof JitsiMeetExternalAPI !== 'undefined') {
-                jitsiApi = new JitsiMeetExternalAPI(domain, options);
-                videoBtn.innerText = "📴 Matikan Video";
-                videoBtn.style.background = "#ff4757";
+            // 2. Akses Kamera
+            navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
+                localStream = stream;
+                document.getElementById('local-video').srcObject = stream;
 
-                jitsiApi.addEventListener('videoConferenceLeft', () => {
-                    jitsiApi.dispose();
-                    jitsiApi = null;
-                    container.innerHTML = '<div style="color: white; padding-top: 180px; display:flex; justify-content:center;">Panggilan Selesai</div>';
-                    videoBtn.innerText = "📞 Mulai Panggilan";
-                    videoBtn.style.background = "#2ecc71";
+                // 3. Jika Ada yang menelpon (Answer Call)
+                peer.on('call', (call) => {
+                    if(confirm("Ada panggilan masuk! Terima?")) {
+                        call.answer(localStream); // Kirim balik video kita
+                        call.on('stream', (remoteStream) => {
+                            document.getElementById('remote-video').srcObject = remoteStream;
+                            statusText.style.display = 'none';
+                        });
+                    }
                 });
-            } else {
-                alert("Script Video Call belum dimuat. Coba refresh.");
-            }
+
+            }).catch((err) => {
+                alert("Gagal akses kamera: " + err);
+            });
+        };
+
+        // 4. Kita yang menelpon (Make Call)
+        callBtn.onclick = () => {
+            const targetId = document.getElementById('target-peer-id').value.trim();
+            if(!targetId) { alert("Masukkan ID pasangan dulu!"); return; }
+            
+            statusText.innerText = "Menghubungkan...";
+            
+            const call = peer.call(targetId, localStream);
+            call.on('stream', (remoteStream) => {
+                document.getElementById('remote-video').srcObject = remoteStream;
+                statusText.style.display = 'none';
+            });
         };
     }
 
