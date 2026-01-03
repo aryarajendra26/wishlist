@@ -367,7 +367,7 @@
         .color-btn { width: 25px; height: 25px; border-radius: 50%; border: 2px solid #eee; cursor: pointer; }
         .color-btn.selected { transform: scale(1.2); border-color: #555; }
 
-        /* --- DREAM JAR STYLES (NEW) --- */
+        /* --- DREAM JAR STYLES --- */
         .jar-container { display: flex; justify-content: center; margin-bottom: 20px; }
         .jar {
             width: 150px; height: 200px;
@@ -395,7 +395,7 @@
         }
         #money-display { font-size: 1.2rem; font-weight: bold; color: var(--dark-pink); margin-bottom: 10px; }
 
-        /* --- MOVIE TRACKER STYLES (NEW) --- */
+        /* --- MOVIE TRACKER STYLES --- */
         .movie-card {
             background: white; padding: 15px; border-radius: 10px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 10px;
@@ -415,6 +415,19 @@
         .status-finished { background: #2ecc71; }
 
         .star-rating { color: #f1c40f; cursor: pointer; font-size: 1.2rem; }
+
+        /* --- INTERACTION STYLES (NEW FEATURE) --- */
+        .interaction-area { margin-top: 15px; padding-top: 10px; border-top: 1px dashed #ddd; }
+        .reactions { display: flex; gap: 8px; margin-bottom: 10px; }
+        .btn-react { background: #fff; border: 1px solid #ffadd2; border-radius: 15px; padding: 4px 10px; font-size: 0.8rem; cursor: pointer; transition: 0.2s; }
+        .btn-react:hover { background: #ffe0ed; transform: scale(1.1); }
+        .comment-section { background: #f9f9f9; padding: 10px; border-radius: 8px; margin-top: 5px; }
+        .comment-list { max-height: 100px; overflow-y: auto; font-size: 0.8rem; margin-bottom: 8px; text-align: left; }
+        .comment-item { margin-bottom: 4px; border-bottom: 1px solid #eee; padding-bottom: 2px; }
+        .comment-item strong { color: var(--dark-pink); }
+        .comment-input-area { display: flex; gap: 5px; }
+        .comment-input-area input { flex: 1; padding: 5px; border: 1px solid #ddd; border-radius: 5px; font-size: 0.8rem; }
+        .comment-input-area button { padding: 5px 10px; font-size: 0.8rem; }
     </style>
 </head>
 <body>
@@ -673,8 +686,8 @@
     const moodCol = collection(db, "moods");
     const gamesCol = collection(db, "games");
     const whiteboardCol = collection(db, "whiteboard");
-    const dreamJarCol = collection(db, "dream_jar"); // KOLEKSI BARU
-    const moviesCol = collection(db, "movies"); // KOLEKSI BARU
+    const dreamJarCol = collection(db, "dream_jar");
+    const moviesCol = collection(db, "movies");
 
     const cloudName = "drduqvdxo";
     const uploadPreset = "l1tm7wdn";
@@ -780,6 +793,35 @@
             mood: emoji,
             timestamp: Date.now()
         });
+    };
+
+    // --- FUNGSI BARU UNTUK WISHLIST (REAKSI & KOMENTAR) ---
+    window.reactItem = async (id, type) => {
+        const ref = doc(db, "wishlist", id);
+        const snap = await getDoc(ref);
+        if(snap.exists()) {
+            const data = snap.data();
+            let reactions = data.reactions || { love: 0, fire: 0, clap: 0 };
+            reactions[type] = (reactions[type] || 0) + 1;
+            await updateDoc(ref, { reactions: reactions });
+        }
+    };
+
+    window.sendItemComment = async (id) => {
+        const input = document.getElementById(`input-comment-${id}`);
+        const text = input.value.trim();
+        if(!text) return;
+        if(!myName) { checkChatIdentity(); return; }
+        
+        const ref = doc(db, "wishlist", id);
+        const snap = await getDoc(ref);
+        if(snap.exists()) {
+            const data = snap.data();
+            let comments = data.comments || [];
+            comments.push({ sender: myName, text: text, time: Date.now() });
+            await updateDoc(ref, { comments: comments });
+            input.value = '';
+        }
     };
 
     // --- FUNGSI MINI GAMES (TIC TAC TOE) ---
@@ -895,7 +937,7 @@
         }
     };
 
-    // --- FUNGSI DREAM JAR (BARU) ---
+    // --- FUNGSI DREAM JAR ---
     const jarDocId = "main_savings";
     const jarLiquid = document.getElementById('jar-liquid');
     const jarLabel = document.getElementById('jar-percentage');
@@ -931,7 +973,7 @@
         }
     };
 
-    // --- FUNGSI MOVIE TRACKER (BARU) ---
+    // --- FUNGSI MOVIE TRACKER ---
     window.addMovie = async () => {
         const title = document.getElementById('movie-title-input').value;
         if(!title) return;
@@ -1091,6 +1133,7 @@
         });
     });
 
+    // --- LISTENER WISHLIST DENGAN FITUR BARU ---
     const wishListUI = document.getElementById('wish-list');
     const memoriesUI = document.getElementById('memories-list');
     onSnapshot(query(wishlistCol, orderBy("createdAt", "desc")), (snapshot) => {
@@ -1099,6 +1142,16 @@
             const data = { id: doc.id, ...doc.data() };
             const li = document.createElement('li');
             if (data.completed) li.classList.add('completed');
+            
+            // Siapkan Komentar
+            const comments = data.comments || [];
+            let commentsHTML = comments.map(c => 
+                `<div class="comment-item"><strong>${c.sender}:</strong> ${c.text}</div>`
+            ).join('');
+            
+            // Siapkan Reaksi
+            const reactions = data.reactions || { love: 0, fire: 0, clap: 0 };
+
             li.innerHTML = `
                 <div class="wish-content">
                     <span class="wish-text">${data.text}</span>
@@ -1106,6 +1159,22 @@
                     ${data.photo ? `<img src="${data.photo}" class="photo-preview" onclick="openLightbox('${data.photo}')">` : ''}
                     <div id="loader-${data.id}" class="loading-text">Loading...</div>
                 </div>
+                
+                <div class="interaction-area">
+                    <div class="reactions">
+                        <button class="btn-react" onclick="window.reactItem('${data.id}', 'love')">❤️ ${reactions.love || 0}</button>
+                        <button class="btn-react" onclick="window.reactItem('${data.id}', 'fire')">🔥 ${reactions.fire || 0}</button>
+                        <button class="btn-react" onclick="window.reactItem('${data.id}', 'clap')">👏 ${reactions.clap || 0}</button>
+                    </div>
+                    <div class="comment-section">
+                        <div class="comment-list" id="comments-${data.id}">${commentsHTML}</div>
+                        <div class="comment-input-area">
+                            <input type="text" id="input-comment-${data.id}" placeholder="Komen dong...">
+                            <button onclick="window.sendItemComment('${data.id}')">Kirim</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="actions">
                     <input type="date" id="date-${data.id}" style="display:none" onchange="window.updateDate('${data.id}', this.value)">
                     <input type="file" id="file-${data.id}" style="display:none" accept="image/*" onchange="window.uploadPhoto(this.files[0], '${data.id}', 'wishlist')">
@@ -1235,6 +1304,7 @@
     function triggerHeartEffect() {
         const now = Date.now();
         if (now - lastHeartTime > 1500) {
+            lastHeartTime = now;
             lastHeartTime = now;
             confetti({ particleCount: 40, spread: 60, origin: { y: 0.7 }, shapes: ['heart'], colors: ['#ff0000', '#ff69b4', '#ff85a1'], scalar: 2 });
             const sound = document.getElementById('success-sound');
