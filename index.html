@@ -674,11 +674,10 @@
         }
     };
 
-    // --- LOGIC VIDEO CALL + AI GESTURE (HATI) ---
+    // --- LOGIC VIDEO CALL + AI GESTURE (KOREAN FINGER HEART) ---
     let peer = null;
     let localStream = null;
     let hands = null; // Variable untuk AI
-    let camera = null; // Variable untuk Camera Loop
     let lastHeartTime = 0; // Cooldown biar gak spam
 
     const openCamBtn = document.getElementById('open-camera-btn');
@@ -694,7 +693,7 @@
                 return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
             }});
             hands.setOptions({
-                maxNumHands: 2,
+                maxNumHands: 1, // Cukup deteksi 1 tangan untuk finger heart
                 modelComplexity: 1,
                 minDetectionConfidence: 0.5,
                 minTrackingConfidence: 0.5
@@ -703,26 +702,22 @@
         }
     }
 
-    // LOGIKA DETEKSI GESTURE HATI (LOVE)
+    // LOGIKA DETEKSI GESTURE FINGER HEART (SARANGHAEYO)
     function onHandResults(results) {
-        if (results.multiHandLandmarks && results.multiHandLandmarks.length === 2) {
-            const hand1 = results.multiHandLandmarks[0];
-            const hand2 = results.multiHandLandmarks[1];
+        if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+            // Cek setiap tangan yang terdeteksi
+            for (const landmarks of results.multiHandLandmarks) {
+                const thumbTip = landmarks[4];  // Ujung Jempol
+                const indexTip = landmarks[8];  // Ujung Telunjuk
 
-            // Titik 4 = Ujung Jempol, Titik 8 = Ujung Telunjuk
-            const h1_thumb = hand1[4];
-            const h1_index = hand1[8];
-            const h2_thumb = hand2[4];
-            const h2_index = hand2[8];
+                // Hitung jarak antara ujung jempol dan telunjuk
+                const distance = Math.sqrt(
+                    Math.pow(thumbTip.x - indexTip.x, 2) + 
+                    Math.pow(thumbTip.y - indexTip.y, 2)
+                );
 
-            // Hitung Jarak (Jempol ketemu Jempol, Telunjuk ketemu Telunjuk)
-            const distThumb = Math.abs(h1_thumb.x - h2_thumb.x) + Math.abs(h1_thumb.y - h2_thumb.y);
-            const distIndex = Math.abs(h1_index.x - h2_index.x) + Math.abs(h1_index.y - h2_index.y);
-
-            // Ambang batas (Threshold)
-            if (distThumb < 0.1 && distIndex < 0.1) {
-                // Cek apakah telunjuk lebih tinggi dari jempol (Biar bentuk hati tegak)
-                if (h1_index.y < h1_thumb.y && h2_index.y < h2_thumb.y) {
+                // Jika jarak sangat dekat (seperti mencubit/menyilang)
+                if (distance < 0.05) { 
                     triggerHeartEffect();
                 }
             }
@@ -731,18 +726,18 @@
 
     function triggerHeartEffect() {
         const now = Date.now();
-        if (now - lastHeartTime > 2000) { // Cooldown 2 detik
+        if (now - lastHeartTime > 1500) { // Cooldown 1.5 detik
             lastHeartTime = now;
             // Confetti bentuk Hati
             confetti({
-                particleCount: 50,
-                spread: 70,
-                origin: { y: 0.8 },
+                particleCount: 40,
+                spread: 60,
+                origin: { y: 0.7 },
                 shapes: ['heart'],
-                colors: ['#ff0000', '#ff69b4'],
+                colors: ['#ff0000', '#ff69b4', '#ff85a1'],
                 scalar: 2
             });
-            console.log("LOVE DETECTED! ❤️");
+            console.log("KOREAN HEART DETECTED! ❤️");
         }
     }
 
