@@ -8,6 +8,9 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
     
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
     
     <style>
         :root { --primary-pink: #ff85a1; --soft-pink: #fbb1bd; --dark-pink: #ff477e; --bg-color: #fff0f3; }
@@ -216,7 +219,7 @@
             gap: 10px;
         }
 
-        /* --- VIDEO CALL STYLES (NEW) --- */
+        /* --- VIDEO CALL STYLES --- */
         .video-container {
             display: flex;
             flex-direction: column;
@@ -238,7 +241,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transform: scaleX(-1); /* Efek Cermin */
+            transform: scaleX(-1);
         }
         #local-video {
             position: absolute;
@@ -256,7 +259,7 @@
             padding: 8px;
             border-radius: 8px;
             margin-bottom: 10px;
-            user-select: all; /* Biar gampang dicopy */
+            user-select: all;
             border: 1px dashed #aaa;
         }
     </style>
@@ -412,8 +415,6 @@
     const uploadPreset = "l1tm7wdn";
 
     // --- GLOBAL FUNCTIONS ---
-    
-    // 1. Switch Tab
     window.switchTab = (tabName, el) => {
         document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.dock-item').forEach(n => n.classList.remove('active'));
@@ -425,7 +426,6 @@
         if (tabName === 'chat') checkChatIdentity();
     };
 
-    // 2. Chat Identity Check
     let myName = localStorage.getItem("chat_username");
     
     function checkChatIdentity() {
@@ -441,7 +441,6 @@
         }
     }
 
-    // 3. Lightbox Logic
     window.openLightbox = (url) => {
         const lb = document.getElementById('lightbox');
         const img = document.getElementById('lightbox-img');
@@ -459,7 +458,6 @@
         }
     };
 
-    // 4. Upload Function
     window.uploadPhoto = async (file, id, colName) => {
         if (!file) return;
         const loader = document.getElementById(`loader-${id}`);
@@ -480,7 +478,6 @@
         }
     };
 
-    // 5. Actions (Done / Delete)
     window.markDone = async (id, status) => {
         if (!status) {
             const sound = document.getElementById('success-sound');
@@ -503,8 +500,6 @@
     };
 
     // --- APPLICATION LOGIC ---
-
-    // Music
     const musicBtn = document.getElementById('music-control');
     const audio = document.getElementById('bg-music');
     let isPlaying = false;
@@ -523,7 +518,6 @@
         };
     }
 
-    // Dock Effect
     const dock = document.getElementById('main-dock');
     const items = document.querySelectorAll('.dock-item');
     if(dock) {
@@ -545,8 +539,7 @@
         });
     }
 
-    // Days Counter
-    const startDate = new Date(2025, 2, 9); // 9 Maret 2025
+    const startDate = new Date(2025, 2, 9);
     const now = new Date();
     const diffInDays = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
     document.getElementById('days-counter').innerText = diffInDays + " Hari";
@@ -556,16 +549,12 @@
     document.getElementById('next-anniv-counter').innerText = Math.ceil((nextAnniv - now) / (1000 * 60 * 60 * 24)) + " Hari Lagi";
 
     // --- DATABASE LISTENERS ---
-
-    // Wishlist & Memories
     const wishListUI = document.getElementById('wish-list');
     const memoriesUI = document.getElementById('memories-list');
     onSnapshot(query(wishlistCol, orderBy("createdAt", "desc")), (snapshot) => {
         wishListUI.innerHTML = ''; memoriesUI.innerHTML = '';
         snapshot.forEach((doc) => {
             const data = { id: doc.id, ...doc.data() };
-            
-            // Render Wish
             const li = document.createElement('li');
             if (data.completed) li.classList.add('completed');
             li.innerHTML = `
@@ -584,7 +573,6 @@
             `;
             wishListUI.appendChild(li);
 
-            // Render Memory
             if(data.completed && data.photo) {
                 const div = document.createElement('div');
                 div.className = 'memory-card';
@@ -594,7 +582,6 @@
         });
     });
 
-    // Activities
     const activityUI = document.getElementById('activity-list');
     onSnapshot(query(activityCol, orderBy("createdAt", "desc")), (snapshot) => {
         activityUI.innerHTML = '';
@@ -617,7 +604,6 @@
         });
     });
 
-    // Notes
     const notesUI = document.getElementById('notes-list');
     onSnapshot(query(notesCol, orderBy("createdAt", "desc")), (snapshot) => {
         notesUI.innerHTML = '';
@@ -630,7 +616,6 @@
         });
     });
 
-    // Chat
     const chatBox = document.getElementById('chat-box');
     onSnapshot(query(chatCol, orderBy("createdAt", "asc")), (snapshot) => {
         chatBox.innerHTML = '';
@@ -646,7 +631,6 @@
         chatBox.scrollTop = chatBox.scrollHeight;
     });
 
-    // --- BUTTON HANDLERS ---
     document.getElementById('add-btn').onclick = async () => {
         const input = document.getElementById('wish-input');
         if (input.value === '') return;
@@ -690,48 +674,124 @@
         }
     };
 
-    // --- LOGIC VIDEO CALL (PEERJS) ---
-    // Simple PeerJS Implementation for 1-on-1 Call
+    // --- LOGIC VIDEO CALL + AI GESTURE (HATI) ---
     let peer = null;
     let localStream = null;
+    let hands = null; // Variable untuk AI
+    let camera = null; // Variable untuk Camera Loop
+    let lastHeartTime = 0; // Cooldown biar gak spam
 
     const openCamBtn = document.getElementById('open-camera-btn');
     const callBtn = document.getElementById('call-peer-btn');
-    const endCallBtn = document.getElementById('end-call-btn'); // BUTTON BARU
+    const endCallBtn = document.getElementById('end-call-btn');
     const myIdDisplay = document.getElementById('my-peer-id');
     const statusText = document.getElementById('status-text');
 
+    // SETUP AI MEDIAPIPE HANDS
+    function setupHands() {
+        if (!hands && window.Hands) {
+            hands = new Hands({locateFile: (file) => {
+                return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+            }});
+            hands.setOptions({
+                maxNumHands: 2,
+                modelComplexity: 1,
+                minDetectionConfidence: 0.5,
+                minTrackingConfidence: 0.5
+            });
+            hands.onResults(onHandResults);
+        }
+    }
+
+    // LOGIKA DETEKSI GESTURE HATI (LOVE)
+    function onHandResults(results) {
+        if (results.multiHandLandmarks && results.multiHandLandmarks.length === 2) {
+            const hand1 = results.multiHandLandmarks[0];
+            const hand2 = results.multiHandLandmarks[1];
+
+            // Titik 4 = Ujung Jempol, Titik 8 = Ujung Telunjuk
+            const h1_thumb = hand1[4];
+            const h1_index = hand1[8];
+            const h2_thumb = hand2[4];
+            const h2_index = hand2[8];
+
+            // Hitung Jarak (Jempol ketemu Jempol, Telunjuk ketemu Telunjuk)
+            const distThumb = Math.abs(h1_thumb.x - h2_thumb.x) + Math.abs(h1_thumb.y - h2_thumb.y);
+            const distIndex = Math.abs(h1_index.x - h2_index.x) + Math.abs(h1_index.y - h2_index.y);
+
+            // Ambang batas (Threshold)
+            if (distThumb < 0.1 && distIndex < 0.1) {
+                // Cek apakah telunjuk lebih tinggi dari jempol (Biar bentuk hati tegak)
+                if (h1_index.y < h1_thumb.y && h2_index.y < h2_thumb.y) {
+                    triggerHeartEffect();
+                }
+            }
+        }
+    }
+
+    function triggerHeartEffect() {
+        const now = Date.now();
+        if (now - lastHeartTime > 2000) { // Cooldown 2 detik
+            lastHeartTime = now;
+            // Confetti bentuk Hati
+            confetti({
+                particleCount: 50,
+                spread: 70,
+                origin: { y: 0.8 },
+                shapes: ['heart'],
+                colors: ['#ff0000', '#ff69b4'],
+                scalar: 2
+            });
+            console.log("LOVE DETECTED! ❤️");
+        }
+    }
+
+    // Fungsi Loop Camera untuk AI
+    async function sendToMediaPipe() {
+        if (localStream && hands) {
+            const videoElement = document.getElementById('local-video');
+            if (!videoElement.paused && !videoElement.ended) {
+                await hands.send({image: videoElement});
+            }
+            requestAnimationFrame(sendToMediaPipe);
+        }
+    }
+
     if(openCamBtn) {
         openCamBtn.onclick = () => {
-            // 1. Inisialisasi Peer (Dapat ID)
+            // 1. Inisialisasi Peer
             peer = new Peer(); 
+            setupHands(); // Siapkan AI
 
             peer.on('open', (id) => {
                 myIdDisplay.innerText = id;
                 statusText.innerText = "Kamera Aktif. Menunggu Panggilan...";
-                openCamBtn.style.display = 'none'; // Sembunyikan tombol buka kamera
-                callBtn.disabled = false; // Aktifkan tombol panggil
-                endCallBtn.style.display = 'block'; // Tampilkan tombol matikan
+                openCamBtn.style.display = 'none';
+                callBtn.disabled = false;
+                endCallBtn.style.display = 'block';
             });
 
             // 2. Akses Kamera
             navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
                 localStream = stream;
-                document.getElementById('local-video').srcObject = stream;
+                const localVid = document.getElementById('local-video');
+                localVid.srcObject = stream;
+                
+                // Mulai deteksi tangan saat video play
+                localVid.onloadedmetadata = () => {
+                    localVid.play();
+                    sendToMediaPipe(); // Mulai kirim gambar ke AI
+                };
 
                 // 3. Jika Ada yang menelpon (Answer Call)
                 peer.on('call', (call) => {
                     if(confirm("Ada panggilan masuk! Terima?")) {
-                        call.answer(localStream); // Kirim balik video kita
+                        call.answer(localStream);
                         call.on('stream', (remoteStream) => {
                             document.getElementById('remote-video').srcObject = remoteStream;
                             statusText.style.display = 'none';
                         });
-                        
-                        // Handler jika lawan bicara menutup
-                        call.on('close', () => {
-                            alert("Panggilan berakhir.");
-                        });
+                        call.on('close', () => alert("Panggilan berakhir."));
                     }
                 });
 
@@ -740,7 +800,7 @@
             });
         };
 
-        // 4. Kita yang menelpon (Make Call)
+        // 4. Kita yang menelpon
         callBtn.onclick = () => {
             const targetId = document.getElementById('target-peer-id').value.trim();
             if(!targetId) { alert("Masukkan ID pasangan dulu!"); return; }
@@ -752,33 +812,30 @@
                 document.getElementById('remote-video').srcObject = remoteStream;
                 statusText.style.display = 'none';
             });
-            call.on('close', () => {
-                alert("Panggilan berakhir.");
-            });
+            call.on('close', () => alert("Panggilan berakhir."));
         };
 
-        // 5. TOMBOL MATIKAN PANGGILAN (Logic Baru)
+        // 5. Matikan Panggilan
         endCallBtn.onclick = () => {
-            // Matikan Kamera & Mic
             if (localStream) {
                 localStream.getTracks().forEach(track => track.stop());
                 localStream = null;
             }
-            
-            // Tutup Koneksi Peer
             if (peer) {
                 peer.destroy();
                 peer = null;
             }
+            if (hands) {
+                hands.close(); // Matikan AI
+                hands = null;
+            }
 
-            // Reset Tampilan Video
             document.getElementById('local-video').srcObject = null;
             document.getElementById('remote-video').srcObject = null;
             statusText.style.display = 'block';
             statusText.innerText = "Klik tombol kamera\nuntuk mulai";
             myIdDisplay.innerText = "...";
 
-            // Reset Tombol
             openCamBtn.style.display = 'block';
             callBtn.disabled = true;
             endCallBtn.style.display = 'none';
