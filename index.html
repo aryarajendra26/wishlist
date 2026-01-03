@@ -356,6 +356,7 @@
             <div style="display:flex; gap:10px;">
                 <button id="open-camera-btn" style="flex:1; background:#3498db;">📸 Buka Kamera</button>
                 <button id="call-peer-btn" style="flex:1; background:#2ecc71;" disabled>📞 Panggil</button>
+                <button id="end-call-btn" style="flex:1; background:#ff4757; display:none;">📴 Matikan</button>
             </div>
         </div>
     </div>
@@ -696,6 +697,7 @@
 
     const openCamBtn = document.getElementById('open-camera-btn');
     const callBtn = document.getElementById('call-peer-btn');
+    const endCallBtn = document.getElementById('end-call-btn'); // BUTTON BARU
     const myIdDisplay = document.getElementById('my-peer-id');
     const statusText = document.getElementById('status-text');
 
@@ -707,8 +709,9 @@
             peer.on('open', (id) => {
                 myIdDisplay.innerText = id;
                 statusText.innerText = "Kamera Aktif. Menunggu Panggilan...";
-                openCamBtn.style.display = 'none'; // Sembunyikan tombol
+                openCamBtn.style.display = 'none'; // Sembunyikan tombol buka kamera
                 callBtn.disabled = false; // Aktifkan tombol panggil
+                endCallBtn.style.display = 'block'; // Tampilkan tombol matikan
             });
 
             // 2. Akses Kamera
@@ -723,6 +726,11 @@
                         call.on('stream', (remoteStream) => {
                             document.getElementById('remote-video').srcObject = remoteStream;
                             statusText.style.display = 'none';
+                        });
+                        
+                        // Handler jika lawan bicara menutup
+                        call.on('close', () => {
+                            alert("Panggilan berakhir.");
                         });
                     }
                 });
@@ -744,6 +752,36 @@
                 document.getElementById('remote-video').srcObject = remoteStream;
                 statusText.style.display = 'none';
             });
+            call.on('close', () => {
+                alert("Panggilan berakhir.");
+            });
+        };
+
+        // 5. TOMBOL MATIKAN PANGGILAN (Logic Baru)
+        endCallBtn.onclick = () => {
+            // Matikan Kamera & Mic
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+            
+            // Tutup Koneksi Peer
+            if (peer) {
+                peer.destroy();
+                peer = null;
+            }
+
+            // Reset Tampilan Video
+            document.getElementById('local-video').srcObject = null;
+            document.getElementById('remote-video').srcObject = null;
+            statusText.style.display = 'block';
+            statusText.innerText = "Klik tombol kamera\nuntuk mulai";
+            myIdDisplay.innerText = "...";
+
+            // Reset Tombol
+            openCamBtn.style.display = 'block';
+            callBtn.disabled = true;
+            endCallBtn.style.display = 'none';
         };
     }
 
