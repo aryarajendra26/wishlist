@@ -728,7 +728,8 @@
         const now = Date.now();
         if (now - lastHeartTime > 1500) { // Cooldown 1.5 detik
             lastHeartTime = now;
-            // Confetti bentuk Hati
+            
+            // 1. EFEK VISUAL (CONFETTI)
             confetti({
                 particleCount: 40,
                 spread: 60,
@@ -737,7 +738,15 @@
                 colors: ['#ff0000', '#ff69b4', '#ff85a1'],
                 scalar: 2
             });
-            console.log("KOREAN HEART DETECTED! ❤️");
+
+            // 2. EFEK SUARA (TING!) - ADDED HERE
+            const sound = document.getElementById('success-sound');
+            if(sound) {
+                sound.currentTime = 0;
+                sound.play().catch(e => console.log("Audio error:", e));
+            }
+
+            console.log("KOREAN HEART DETECTED! ❤️🔊");
         }
     }
 
