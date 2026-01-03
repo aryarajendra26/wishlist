@@ -7,6 +7,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
     
+    <script src='https://meet.jit.si/external_api.js'></script>
+    
     <style>
         :root { --primary-pink: #ff85a1; --soft-pink: #fbb1bd; --dark-pink: #ff477e; --bg-color: #fff0f3; }
         body { font-family: 'Poppins', sans-serif; background-color: var(--bg-color); margin: 0; padding: 20px 0 100px 0; color: #444; display: flex; justify-content: center; overflow-x: hidden; }
@@ -287,6 +289,16 @@
             <button id="send-chat-btn">Kirim</button>
         </div>
     </div>
+
+    <div id="tab-video" class="tab-content">
+        <h1>Video Call 📹</h1>
+        <p class="subtitle">Tatap muka walau jauh..</p>
+        <div id="meet-container" style="height: 400px; background: #000; border-radius: 15px; overflow: hidden; margin-bottom: 15px;">
+            <div style="color: white; padding-top: 180px; display:flex; justify-content:center; align-items:center;">Klik tombol untuk mulai</div>
+        </div>
+        <button id="start-call-btn" style="width: 100%; background: #2ecc71;">📞 Mulai Panggilan</button>
+    </div>
+
 </div>
 
 <div class="dock-wrapper">
@@ -305,6 +317,9 @@
         </div>
         <div class="dock-item" onclick="window.switchTab('chat', this)">
             💬<div class="dock-label">Chat</div>
+        </div>
+        <div class="dock-item" onclick="window.switchTab('video', this)">
+            📹<div class="dock-label">V-Call</div>
         </div>
     </div>
 </div>
@@ -613,6 +628,54 @@
             alert("Oke, nama diganti jadi: " + newName);
         }
     };
+
+    // --- LOGIC VIDEO CALL ---
+    let jitsiApi = null;
+    const videoBtn = document.getElementById('start-call-btn');
+    if(videoBtn) {
+        videoBtn.onclick = () => {
+            const domain = "meet.jit.si";
+            const container = document.getElementById('meet-container');
+
+            if (jitsiApi) {
+                jitsiApi.dispose();
+                jitsiApi = null;
+                container.innerHTML = '<div style="color: white; padding-top: 180px; display:flex; justify-content:center;">Panggilan Diakhiri</div>';
+                videoBtn.innerText = "📞 Mulai Panggilan";
+                videoBtn.style.background = "#2ecc71";
+                return;
+            }
+
+            container.innerHTML = "";
+            const roomName = "OurLoveJourney_Room_" + "SecureVideo"; 
+
+            const options = {
+                roomName: roomName,
+                width: "100%",
+                height: "100%",
+                parentNode: container,
+                userInfo: { displayName: myName || "Sayang" },
+                configOverwrite: { startWithAudioMuted: false, startWithVideoMuted: false },
+                interfaceConfigOverwrite: { TOOLBAR_BUTTONS: ['microphone', 'camera', 'tileview', 'hangup'] }
+            };
+
+            if(typeof JitsiMeetExternalAPI !== 'undefined') {
+                jitsiApi = new JitsiMeetExternalAPI(domain, options);
+                videoBtn.innerText = "📴 Matikan Video";
+                videoBtn.style.background = "#ff4757";
+
+                jitsiApi.addEventListener('videoConferenceLeft', () => {
+                    jitsiApi.dispose();
+                    jitsiApi = null;
+                    container.innerHTML = '<div style="color: white; padding-top: 180px; display:flex; justify-content:center;">Panggilan Selesai</div>';
+                    videoBtn.innerText = "📞 Mulai Panggilan";
+                    videoBtn.style.background = "#2ecc71";
+                });
+            } else {
+                alert("Script Video Call belum dimuat. Coba refresh.");
+            }
+        };
+    }
 
 </script>
 </body>
