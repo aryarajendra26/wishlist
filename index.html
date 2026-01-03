@@ -37,6 +37,7 @@
             background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(15px); 
             border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.5);
             box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            max-width: 90vw; overflow-x: auto; /* Agar bisa di-scroll jika item banyak */
         }
         .dock-item { 
             width: 50px; height: 50px; background: white; border-radius: 14px; 
@@ -45,6 +46,7 @@
             transition: width 0.1s, height 0.1s, transform 0.1s;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             position: relative;
+            flex-shrink: 0;
         }
         .dock-item.active { border: 2px solid var(--dark-pink); }
         
@@ -76,7 +78,7 @@
 
         /* Standard Elements */
         .input-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-        input[type="text"] { padding: 12px; border: 2px solid var(--soft-pink); border-radius: 10px; outline: none; }
+        input[type="text"], input[type="number"] { padding: 12px; border: 2px solid var(--soft-pink); border-radius: 10px; outline: none; }
         button { background: var(--primary-pink); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 600; }
         ul { list-style: none; padding: 0; text-align: left; }
         li { background: #fff; border-left: 5px solid var(--primary-pink); margin-bottom: 15px; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
@@ -356,33 +358,63 @@
             display: inline-block;
         }
 
-        /* --- WHITEBOARD STYLES (NEW) --- */
-        .whiteboard-container {
-            display: flex; flex-direction: column; gap: 10px;
-        }
-        .canvas-box {
-            border: 2px dashed var(--soft-pink);
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-            touch-action: none; /* Mencegah scroll saat menggambar di HP */
-            width: 100%;
-            height: 300px;
-            position: relative;
-        }
-        canvas {
-            display: block; width: 100%; height: 100%; cursor: crosshair;
-        }
-        .wb-controls {
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .color-picker {
-            display: flex; gap: 5px;
-        }
-        .color-btn {
-            width: 25px; height: 25px; border-radius: 50%; border: 2px solid #eee; cursor: pointer;
-        }
+        /* --- WHITEBOARD STYLES --- */
+        .whiteboard-container { display: flex; flex-direction: column; gap: 10px; }
+        .canvas-box { border: 2px dashed var(--soft-pink); background: white; border-radius: 10px; overflow: hidden; touch-action: none; width: 100%; height: 300px; position: relative; }
+        canvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
+        .wb-controls { display: flex; justify-content: space-between; align-items: center; }
+        .color-picker { display: flex; gap: 5px; }
+        .color-btn { width: 25px; height: 25px; border-radius: 50%; border: 2px solid #eee; cursor: pointer; }
         .color-btn.selected { transform: scale(1.2); border-color: #555; }
+
+        /* --- DREAM JAR STYLES (NEW) --- */
+        .jar-container { display: flex; justify-content: center; margin-bottom: 20px; }
+        .jar {
+            width: 150px; height: 200px;
+            border: 4px solid #888;
+            border-radius: 50px 50px 20px 20px;
+            position: relative;
+            background: rgba(255, 255, 255, 0.5);
+            overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+        }
+        .jar::before {
+            content: ''; position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+            width: 120px; height: 20px; border: 4px solid #888; border-radius: 10px; background: #ddd;
+        }
+        .liquid {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 0%;
+            background: linear-gradient(to top, #ff9a9e 0%, #fecfef 100%);
+            transition: height 1s ease-in-out;
+            opacity: 0.8;
+        }
+        .jar-label {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 1.5rem; font-weight: bold; color: #444; z-index: 10;
+            text-shadow: 0 2px 5px rgba(255,255,255,0.8);
+        }
+        #money-display { font-size: 1.2rem; font-weight: bold; color: var(--dark-pink); margin-bottom: 10px; }
+
+        /* --- MOVIE TRACKER STYLES (NEW) --- */
+        .movie-card {
+            background: white; padding: 15px; border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-left: 5px solid #ddd;
+        }
+        .movie-card.planned { border-left-color: #f1c40f; } /* Kuning */
+        .movie-card.watching { border-left-color: #3498db; } /* Biru */
+        .movie-card.finished { border-left-color: #2ecc71; } /* Hijau */
+        
+        .movie-info-text { text-align: left; }
+        .movie-title { font-weight: 600; display: block; }
+        .movie-status { font-size: 0.75rem; padding: 2px 8px; border-radius: 10px; color: white; margin-top: 4px; display: inline-block;}
+        
+        .status-planned { background: #f1c40f; }
+        .status-watching { background: #3498db; }
+        .status-finished { background: #2ecc71; }
+
+        .star-rating { color: #f1c40f; cursor: pointer; font-size: 1.2rem; }
     </style>
 </head>
 <body>
@@ -529,7 +561,6 @@
             <div class="canvas-box">
                 <canvas id="drawing-board"></canvas>
             </div>
-            
             <div class="wb-controls">
                 <div class="color-picker">
                     <div class="color-btn selected" style="background:#000" onclick="window.setColor('#000', this)"></div>
@@ -540,6 +571,45 @@
                 <button onclick="window.clearBoard()" style="background:#e74c3c; padding:8px 15px; font-size:0.8rem;">🗑️ Hapus</button>
             </div>
         </div>
+    </div>
+
+    <div id="tab-dreamjar" class="tab-content">
+        <h1>Dream Jar 💰</h1>
+        <p class="subtitle">Tabungan mimpi bersama..</p>
+        
+        <div class="jar-container">
+            <div class="jar">
+                <div class="liquid" id="jar-liquid"></div>
+                <div class="jar-label" id="jar-percentage">0%</div>
+            </div>
+        </div>
+        
+        <h2 id="goal-name-display" style="color:var(--dark-pink); margin-bottom:5px;">Target: Liburan</h2>
+        <p id="money-display">Rp 0 / Rp 0</p>
+
+        <div class="input-group">
+            <input type="text" id="goal-name-input" placeholder="Set Nama Target (Misal: Nikah)">
+            <input type="number" id="target-amount-input" placeholder="Set Jumlah Target (Misal: 10000000)">
+            <button onclick="window.setGoal()" style="background:#3498db;">🎯 Set Goal</button>
+        </div>
+        <hr style="border:0; border-top:1px dashed #ddd; margin:15px 0;">
+        <div class="input-group">
+            <input type="number" id="add-savings-input" placeholder="Masukan nominal nabung...">
+            <button onclick="window.addSavings()">➕ Nabung</button>
+        </div>
+    </div>
+
+    <div id="tab-movies" class="tab-content">
+        <h1>Bioskop Mini 🎬</h1>
+        <p class="subtitle">Daftar film & series kita..</p>
+        
+        <div class="input-group">
+            <input type="text" id="movie-title-input" placeholder="Judul Film / Series...">
+            <button onclick="window.addMovie()">➕ Tambah Film</button>
+        </div>
+
+        <div id="movie-list" style="max-height:300px; overflow-y:auto; padding:5px;">
+            </div>
     </div>
 
 </div>
@@ -570,6 +640,12 @@
         <div class="dock-item" onclick="window.switchTab('whiteboard', this)">
             🎨<div class="dock-label">Draw</div>
         </div>
+        <div class="dock-item" onclick="window.switchTab('dreamjar', this)">
+            💰<div class="dock-label">Jar</div>
+        </div>
+        <div class="dock-item" onclick="window.switchTab('movies', this)">
+            🎬<div class="dock-label">Movie</div>
+        </div>
     </div>
 </div>
 
@@ -596,7 +672,9 @@
     const chatCol = collection(db, "chat");
     const moodCol = collection(db, "moods");
     const gamesCol = collection(db, "games");
-    const whiteboardCol = collection(db, "whiteboard"); // KOLEKSI BARU
+    const whiteboardCol = collection(db, "whiteboard");
+    const dreamJarCol = collection(db, "dream_jar"); // KOLEKSI BARU
+    const moviesCol = collection(db, "movies"); // KOLEKSI BARU
 
     const cloudName = "drduqvdxo";
     const uploadPreset = "l1tm7wdn";
@@ -611,7 +689,7 @@
         if(el) el.classList.add('active');
 
         if (tabName === 'chat') checkChatIdentity();
-        if (tabName === 'whiteboard') setupCanvas(); // Resize canvas saat tab dibuka
+        if (tabName === 'whiteboard') setupCanvas();
     };
 
     let myName = localStorage.getItem("chat_username");
@@ -726,7 +804,6 @@
         const nextTurn = turn === "X" ? "O" : "X";
 
         await setDoc(gameRef, { board: board, turn: nextTurn }, { merge: true });
-        
         checkWin(board);
     };
 
@@ -740,22 +817,13 @@
     };
 
     function checkWin(board) {
-        const winPatterns = [
-            [0,1,2], [3,4,5], [6,7,8], 
-            [0,3,6], [1,4,7], [2,5,8], 
-            [0,4,8], [2,4,6]
-        ];
-        
+        const winPatterns = [ [0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7], [2,5,8], [0,4,8], [2,4,6] ];
         for (let p of winPatterns) {
             const [a, b, c] = p;
             if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-                // VISUAL CONFETTI
                 if(window.confetti) confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-                
-                // AUDIO TING! (BARU DITAMBAHKAN)
                 const sound = document.getElementById('success-sound');
                 if(sound) { sound.currentTime = 0; sound.play().catch(e=>{}); }
-
                 setTimeout(() => alert("Pemenangnya: " + board[a]), 100);
                 return true;
             }
@@ -767,7 +835,7 @@
         return false;
     }
 
-    // --- FUNGSI WHITEBOARD (BARU) ---
+    // --- FUNGSI WHITEBOARD ---
     let canvas, ctx;
     let isDrawing = false;
     let currentColor = '#000';
@@ -776,30 +844,17 @@
     function setupCanvas() {
         canvas = document.getElementById('drawing-board');
         if(!canvas) return;
-        
-        // Resize canvas agar sesuai tampilan
         const rect = canvas.parentElement.getBoundingClientRect();
         canvas.width = rect.width;
         canvas.height = rect.height;
-        
         ctx = canvas.getContext('2d');
         ctx.lineCap = 'round';
         ctx.lineWidth = 3;
-
-        // Mouse Events
         canvas.addEventListener('mousedown', startDraw);
         canvas.addEventListener('mousemove', draw);
         canvas.addEventListener('mouseup', stopDraw);
-        
-        // Touch Events
-        canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            startDraw(e.touches[0]);
-        });
-        canvas.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            draw(e.touches[0]);
-        });
+        canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDraw(e.touches[0]); });
+        canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e.touches[0]); });
         canvas.addEventListener('touchend', stopDraw);
     }
 
@@ -819,10 +874,7 @@
     }
 
     function stopDraw() {
-        if (isDrawing) {
-            isDrawing = false;
-            saveBoard(); // Simpan ke Firebase saat selesai coret
-        }
+        if (isDrawing) { isDrawing = false; saveBoard(); }
     }
 
     window.setColor = (color, el) => {
@@ -841,6 +893,58 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             saveBoard();
         }
+    };
+
+    // --- FUNGSI DREAM JAR (BARU) ---
+    const jarDocId = "main_savings";
+    const jarLiquid = document.getElementById('jar-liquid');
+    const jarLabel = document.getElementById('jar-percentage');
+    const moneyDisplay = document.getElementById('money-display');
+    const goalDisplay = document.getElementById('goal-name-display');
+
+    window.setGoal = async () => {
+        const name = document.getElementById('goal-name-input').value;
+        const amount = Number(document.getElementById('target-amount-input').value);
+        if(!name || amount <= 0) return alert("Isi nama & target valid!");
+        
+        await setDoc(doc(db, "dream_jar", jarDocId), { goal: name, target: amount, current: 0 }, { merge: true });
+        alert("Target diatur!");
+    };
+
+    window.addSavings = async () => {
+        const amount = Number(document.getElementById('add-savings-input').value);
+        if(amount <= 0) return;
+        
+        const ref = doc(db, "dream_jar", jarDocId);
+        const snap = await getDoc(ref);
+        if(snap.exists()) {
+            const data = snap.data();
+            await updateDoc(ref, { current: (data.current || 0) + amount });
+            document.getElementById('add-savings-input').value = '';
+            
+            // Efek suara + Confetti
+            if(window.confetti) confetti({ particleCount: 50, spread: 50, origin: { y: 0.8 }, colors: ['#ffd700'] });
+            const sound = document.getElementById('success-sound');
+            if(sound) { sound.currentTime = 0; sound.play().catch(e=>{}); }
+        } else {
+            alert("Set goal dulu diatas!");
+        }
+    };
+
+    // --- FUNGSI MOVIE TRACKER (BARU) ---
+    window.addMovie = async () => {
+        const title = document.getElementById('movie-title-input').value;
+        if(!title) return;
+        await addDoc(moviesCol, { title: title, status: 'planned', rating: 0, createdAt: Date.now() });
+        document.getElementById('movie-title-input').value = '';
+    };
+
+    window.updateMovieStatus = async (id, status) => {
+        await updateDoc(doc(db, "movies", id), { status: status });
+    };
+
+    window.rateMovie = async (id, rating) => {
+        await updateDoc(doc(db, "movies", id), { rating: rating, status: 'finished' });
     };
 
     // --- APPLICATION LOGIC ---
@@ -894,57 +998,95 @@
 
     // --- DATABASE LISTENERS ---
     
-    // LISTENER WHITEBOARD (REALTIME SYNC)
+    // LISTENER DREAM JAR
+    onSnapshot(doc(db, "dream_jar", jarDocId), (doc) => {
+        if(doc.exists()) {
+            const data = doc.data();
+            const percent = Math.min(100, Math.round((data.current / data.target) * 100));
+            jarLiquid.style.height = `${percent}%`;
+            jarLabel.innerText = `${percent}%`;
+            goalDisplay.innerText = `Target: ${data.goal}`;
+            moneyDisplay.innerText = `Rp ${data.current.toLocaleString()} / Rp ${data.target.toLocaleString()}`;
+        }
+    });
+
+    // LISTENER MOVIE TRACKER
+    const movieListUI = document.getElementById('movie-list');
+    onSnapshot(query(moviesCol, orderBy("createdAt", "desc")), (snapshot) => {
+        movieListUI.innerHTML = '';
+        snapshot.forEach((doc) => {
+            const data = { id: doc.id, ...doc.data() };
+            const div = document.createElement('div');
+            div.className = `movie-card ${data.status}`;
+            
+            let statusLabel = 'Rencana 📅';
+            if(data.status === 'watching') statusLabel = 'Sedang Nonton 🍿';
+            if(data.status === 'finished') statusLabel = 'Selesai ✅';
+
+            let controls = '';
+            if(data.status === 'planned') controls = `<button style="padding:5px 10px; font-size:0.7rem; background:#3498db;" onclick="window.updateMovieStatus('${data.id}', 'watching')">▶️ Mulai</button>`;
+            if(data.status === 'watching') controls = `<button style="padding:5px 10px; font-size:0.7rem; background:#2ecc71;" onclick="window.updateMovieStatus('${data.id}', 'finished')">✅ Kelar</button>`;
+            if(data.status === 'finished') {
+                controls = `
+                    <div class="star-rating">
+                        <span onclick="window.rateMovie('${data.id}', 1)">${data.rating >= 1 ? '⭐' : '☆'}</span>
+                        <span onclick="window.rateMovie('${data.id}', 2)">${data.rating >= 2 ? '⭐' : '☆'}</span>
+                        <span onclick="window.rateMovie('${data.id}', 3)">${data.rating >= 3 ? '⭐' : '☆'}</span>
+                        <span onclick="window.rateMovie('${data.id}', 4)">${data.rating >= 4 ? '⭐' : '☆'}</span>
+                        <span onclick="window.rateMovie('${data.id}', 5)">${data.rating >= 5 ? '⭐' : '☆'}</span>
+                    </div>
+                `;
+            }
+
+            div.innerHTML = `
+                <div class="movie-info-text">
+                    <span class="movie-title">${data.title}</span>
+                    <span class="movie-status status-${data.status}">${statusLabel}</span>
+                </div>
+                <div>
+                    ${controls}
+                    <button class="btn-delete" style="width:25px; height:25px; font-size:0.8rem; margin-top:5px; margin-left:auto;" onclick="window.deleteItem('${data.id}', 'movies')">✖</button>
+                </div>
+            `;
+            movieListUI.appendChild(div);
+        });
+    });
+
     onSnapshot(doc(db, "whiteboard", wbDocId), (doc) => {
         if (doc.exists() && ctx) {
             const data = doc.data();
             const img = new Image();
-            img.onload = () => {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(img, 0, 0);
-            };
+            img.onload = () => { ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.drawImage(img, 0, 0); };
             img.src = data.image;
         }
     });
 
-    // LISTENER GAMES
     const gameStatus = document.getElementById('game-status');
     const cells = document.querySelectorAll('.cell');
-    
     onSnapshot(doc(db, "games", gameDocId), (doc) => {
         if (doc.exists()) {
             const data = doc.data();
             const board = data.board;
             const turn = data.turn;
-
             cells.forEach((cell, index) => {
                 cell.innerText = board[index];
                 if (board[index] !== "") cell.classList.add('taken');
                 else cell.classList.remove('taken');
             });
-
             gameStatus.innerText = "Giliran: " + turn;
         }
     });
 
-    // LISTENER MOOD METER
     const moodDisplay = document.getElementById('mood-display');
     onSnapshot(query(moodCol, orderBy("timestamp", "desc")), (snapshot) => {
-        if(snapshot.empty) {
-            moodDisplay.innerHTML = '<span style="font-size:0.8rem; color:#aaa;">Belum ada status...</span>';
-            return;
-        }
+        if(snapshot.empty) { moodDisplay.innerHTML = '<span style="font-size:0.8rem; color:#aaa;">Belum ada status...</span>'; return; }
         moodDisplay.innerHTML = '';
         snapshot.forEach((doc) => {
             const data = doc.data();
             const time = new Date(data.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            
             const div = document.createElement('div');
             div.className = 'current-mood';
-            div.innerHTML = `
-                <div><strong>${data.user}</strong> <span style="font-size:0.7rem; color:#999;">(${time})</span></div>
-                <div class="mood-emoji">${data.mood}</div>
-            `;
+            div.innerHTML = `<div><strong>${data.user}</strong> <span style="font-size:0.7rem; color:#999;">(${time})</span></div><div class="mood-emoji">${data.mood}</div>`;
             moodDisplay.appendChild(div);
         });
     });
@@ -967,7 +1109,6 @@
                 <div class="actions">
                     <input type="date" id="date-${data.id}" style="display:none" onchange="window.updateDate('${data.id}', this.value)">
                     <input type="file" id="file-${data.id}" style="display:none" accept="image/*" onchange="window.uploadPhoto(this.files[0], '${data.id}', 'wishlist')">
-                    
                     <button class="btn-photo" onclick="document.getElementById('file-${data.id}').click()">📷</button>
                     <button class="btn-date" onclick="document.getElementById('date-${data.id}').showPicker()">📅</button>
                     <button class="btn-done" onclick="window.markDone('${data.id}', ${data.completed})">✔</button>
@@ -975,7 +1116,6 @@
                 </div>
             `;
             wishListUI.appendChild(li);
-
             if(data.completed && data.photo) {
                 const div = document.createElement('div');
                 div.className = 'memory-card';
@@ -991,18 +1131,7 @@
         snapshot.forEach((doc) => {
             const data = { id: doc.id, ...doc.data() };
             const li = document.createElement('li');
-            li.innerHTML = `
-                <div class="wish-content">
-                    <span class="wish-text">${data.text}</span>
-                    ${data.photo ? `<img src="${data.photo}" class="photo-preview" onclick="openLightbox('${data.photo}')">` : ''}
-                    <div id="loader-${data.id}" class="loading-text">Loading...</div>
-                </div>
-                <div class="actions">
-                    <input type="file" id="file-${data.id}" style="display:none" accept="image/*" onchange="window.uploadPhoto(this.files[0], '${data.id}', 'activities')">
-                    <button class="btn-photo" onclick="document.getElementById('file-${data.id}').click()">📷</button>
-                    <button class="btn-delete" onclick="window.deleteItem('${data.id}', 'activities')">✖</button>
-                </div>
-            `;
+            li.innerHTML = `<div class="wish-content"><span class="wish-text">${data.text}</span>${data.photo ? `<img src="${data.photo}" class="photo-preview" onclick="openLightbox('${data.photo}')">` : ''}<div id="loader-${data.id}" class="loading-text">Loading...</div></div><div class="actions"><input type="file" id="file-${data.id}" style="display:none" accept="image/*" onchange="window.uploadPhoto(this.files[0], '${data.id}', 'activities')"><button class="btn-photo" onclick="document.getElementById('file-${data.id}').click()">📷</button><button class="btn-delete" onclick="window.deleteItem('${data.id}', 'activities')">✖</button></div>`;
             activityUI.appendChild(li);
         });
     });
@@ -1077,178 +1206,77 @@
         }
     };
 
-    // --- LOGIC VIDEO CALL + AI GESTURE (KOREAN FINGER HEART) ---
-    let peer = null;
-    let localStream = null;
-    let hands = null; // Variable untuk AI
-    let lastHeartTime = 0; // Cooldown biar gak spam
-
+    // --- LOGIC VIDEO CALL + AI GESTURE ---
+    let peer = null; let localStream = null; let hands = null; let lastHeartTime = 0;
     const openCamBtn = document.getElementById('open-camera-btn');
     const callBtn = document.getElementById('call-peer-btn');
     const endCallBtn = document.getElementById('end-call-btn');
     const myIdDisplay = document.getElementById('my-peer-id');
     const statusText = document.getElementById('status-text');
 
-    // SETUP AI MEDIAPIPE HANDS
     function setupHands() {
         if (!hands && window.Hands) {
-            hands = new Hands({locateFile: (file) => {
-                return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
-            }});
-            hands.setOptions({
-                maxNumHands: 1, // Cukup deteksi 1 tangan untuk finger heart
-                modelComplexity: 1,
-                minDetectionConfidence: 0.5,
-                minTrackingConfidence: 0.5
-            });
+            hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
+            hands.setOptions({maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5});
             hands.onResults(onHandResults);
         }
     }
 
-    // LOGIKA DETEKSI GESTURE FINGER HEART (SARANGHAEYO)
     function onHandResults(results) {
         if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-            // Cek setiap tangan yang terdeteksi
             for (const landmarks of results.multiHandLandmarks) {
-                const thumbTip = landmarks[4];  // Ujung Jempol
-                const indexTip = landmarks[8];  // Ujung Telunjuk
-
-                // Hitung jarak antara ujung jempol dan telunjuk
-                const distance = Math.sqrt(
-                    Math.pow(thumbTip.x - indexTip.x, 2) + 
-                    Math.pow(thumbTip.y - indexTip.y, 2)
-                );
-
-                // Jika jarak sangat dekat (seperti mencubit/menyilang)
-                if (distance < 0.05) { 
-                    triggerHeartEffect();
-                }
+                const thumbTip = landmarks[4]; const indexTip = landmarks[8];
+                const distance = Math.sqrt(Math.pow(thumbTip.x - indexTip.x, 2) + Math.pow(thumbTip.y - indexTip.y, 2));
+                if (distance < 0.05) triggerHeartEffect();
             }
         }
     }
 
     function triggerHeartEffect() {
         const now = Date.now();
-        if (now - lastHeartTime > 1500) { // Cooldown 1.5 detik
+        if (now - lastHeartTime > 1500) {
             lastHeartTime = now;
-            
-            // 1. EFEK VISUAL (CONFETTI)
-            confetti({
-                particleCount: 40,
-                spread: 60,
-                origin: { y: 0.7 },
-                shapes: ['heart'],
-                colors: ['#ff0000', '#ff69b4', '#ff85a1'],
-                scalar: 2
-            });
-
-            // 2. EFEK SUARA (TING!)
+            confetti({ particleCount: 40, spread: 60, origin: { y: 0.7 }, shapes: ['heart'], colors: ['#ff0000', '#ff69b4', '#ff85a1'], scalar: 2 });
             const sound = document.getElementById('success-sound');
-            if(sound) {
-                sound.currentTime = 0;
-                sound.play().catch(e => console.log("Audio error:", e));
-            }
-
-            console.log("KOREAN HEART DETECTED! ❤️🔊");
+            if(sound) { sound.currentTime = 0; sound.play().catch(e => console.log(e)); }
         }
     }
 
-    // Fungsi Loop Camera untuk AI
     async function sendToMediaPipe() {
         if (localStream && hands) {
             const videoElement = document.getElementById('local-video');
-            if (!videoElement.paused && !videoElement.ended) {
-                await hands.send({image: videoElement});
-            }
+            if (!videoElement.paused && !videoElement.ended) await hands.send({image: videoElement});
             requestAnimationFrame(sendToMediaPipe);
         }
     }
 
     if(openCamBtn) {
         openCamBtn.onclick = () => {
-            // 1. Inisialisasi Peer
-            peer = new Peer(); 
-            setupHands(); // Siapkan AI
-
-            peer.on('open', (id) => {
-                myIdDisplay.innerText = id;
-                statusText.innerText = "Kamera Aktif. Menunggu Panggilan...";
-                openCamBtn.style.display = 'none';
-                callBtn.disabled = false;
-                endCallBtn.style.display = 'block';
-            });
-
-            // 2. Akses Kamera
+            peer = new Peer(); setupHands();
+            peer.on('open', (id) => { myIdDisplay.innerText = id; statusText.innerText = "Kamera Aktif. Menunggu Panggilan..."; openCamBtn.style.display = 'none'; callBtn.disabled = false; endCallBtn.style.display = 'block'; });
             navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
-                localStream = stream;
-                const localVid = document.getElementById('local-video');
-                localVid.srcObject = stream;
-                
-                // Mulai deteksi tangan saat video play
-                localVid.onloadedmetadata = () => {
-                    localVid.play();
-                    sendToMediaPipe(); // Mulai kirim gambar ke AI
-                };
-
-                // 3. Jika Ada yang menelpon (Answer Call)
-                peer.on('call', (call) => {
-                    if(confirm("Ada panggilan masuk! Terima?")) {
-                        call.answer(localStream);
-                        call.on('stream', (remoteStream) => {
-                            document.getElementById('remote-video').srcObject = remoteStream;
-                            statusText.style.display = 'none';
-                        });
-                        call.on('close', () => alert("Panggilan berakhir."));
-                    }
-                });
-
-            }).catch((err) => {
-                alert("Gagal akses kamera: " + err);
-            });
+                localStream = stream; const localVid = document.getElementById('local-video'); localVid.srcObject = stream;
+                localVid.onloadedmetadata = () => { localVid.play(); sendToMediaPipe(); };
+                peer.on('call', (call) => { if(confirm("Ada panggilan masuk! Terima?")) { call.answer(localStream); call.on('stream', (remoteStream) => { document.getElementById('remote-video').srcObject = remoteStream; statusText.style.display = 'none'; }); call.on('close', () => alert("Panggilan berakhir.")); } });
+            }).catch((err) => alert("Gagal akses kamera: " + err));
         };
-
-        // 4. Kita yang menelpon
         callBtn.onclick = () => {
             const targetId = document.getElementById('target-peer-id').value.trim();
-            if(!targetId) { alert("Masukkan ID pasangan dulu!"); return; }
-            
+            if(!targetId) return alert("Masukkan ID pasangan dulu!");
             statusText.innerText = "Menghubungkan...";
-            
             const call = peer.call(targetId, localStream);
-            call.on('stream', (remoteStream) => {
-                document.getElementById('remote-video').srcObject = remoteStream;
-                statusText.style.display = 'none';
-            });
+            call.on('stream', (remoteStream) => { document.getElementById('remote-video').srcObject = remoteStream; statusText.style.display = 'none'; });
             call.on('close', () => alert("Panggilan berakhir."));
         };
-
-        // 5. Matikan Panggilan
         endCallBtn.onclick = () => {
-            if (localStream) {
-                localStream.getTracks().forEach(track => track.stop());
-                localStream = null;
-            }
-            if (peer) {
-                peer.destroy();
-                peer = null;
-            }
-            if (hands) {
-                hands.close(); // Matikan AI
-                hands = null;
-            }
-
-            document.getElementById('local-video').srcObject = null;
-            document.getElementById('remote-video').srcObject = null;
-            statusText.style.display = 'block';
-            statusText.innerText = "Klik tombol kamera\nuntuk mulai";
-            myIdDisplay.innerText = "...";
-
-            openCamBtn.style.display = 'block';
-            callBtn.disabled = true;
-            endCallBtn.style.display = 'none';
+            if (localStream) { localStream.getTracks().forEach(track => track.stop()); localStream = null; }
+            if (peer) { peer.destroy(); peer = null; }
+            if (hands) { hands.close(); hands = null; }
+            document.getElementById('local-video').srcObject = null; document.getElementById('remote-video').srcObject = null;
+            statusText.style.display = 'block'; statusText.innerText = "Klik tombol kamera\nuntuk mulai"; myIdDisplay.innerText = "...";
+            openCamBtn.style.display = 'block'; callBtn.disabled = true; endCallBtn.style.display = 'none';
         };
     }
-
 </script>
 </body>
 </html>
